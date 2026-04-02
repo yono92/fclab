@@ -29,7 +29,7 @@ export function MatchTypeChips({
   onSelect,
 }: MatchTypeChipsProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
       {matchTypeCounts.map((mt) => {
         const isSelected = mt.matchtype === selected;
         const isDisabled = mt.count === 0;
@@ -40,17 +40,17 @@ export function MatchTypeChips({
             key={mt.matchtype}
             disabled={isDisabled}
             onClick={() => !isDisabled && onSelect(mt.matchtype)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1 font-mono text-xs transition-colors ${
               isSelected
-                ? "bg-primary text-primary-foreground"
+                ? "border-primary/50 bg-primary/10 text-primary"
                 : isDisabled
-                  ? "bg-muted text-muted-foreground opacity-40 cursor-not-allowed"
-                  : "bg-muted text-muted-foreground hover:bg-accent"
+                  ? "border-border/20 bg-transparent text-muted-foreground/30 cursor-not-allowed"
+                  : "border-border/30 bg-card/30 text-muted-foreground hover:border-primary/30 hover:text-foreground"
             }`}
           >
             <span>{icon}</span>
             <span>{mt.desc}</span>
-            <span className="text-xs opacity-70">({mt.count})</span>
+            <span className="tabular-nums opacity-60">{mt.count}</span>
           </button>
         );
       })}

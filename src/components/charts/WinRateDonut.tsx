@@ -8,7 +8,7 @@ interface WinRateDonutProps {
   losses: number;
 }
 
-const COLORS = ["#22c55e", "#6b7280", "#ef4444"];
+const COLORS = ["#00d68f", "#4a5568", "#ef4444"];
 
 export function WinRateDonut({ wins, draws, losses }: WinRateDonutProps) {
   const total = wins + draws + losses;
@@ -22,15 +22,15 @@ export function WinRateDonut({ wins, draws, losses }: WinRateDonutProps) {
 
   return (
     <div className="flex flex-col items-center">
-      <ResponsiveContainer width={160} height={160}>
+      <ResponsiveContainer width={140} height={140}>
         <PieChart>
           <Pie
             data={data}
             dataKey="value"
             cx="50%"
             cy="50%"
-            innerRadius={45}
-            outerRadius={70}
+            innerRadius={42}
+            outerRadius={62}
             strokeWidth={0}
           >
             {data.map((_, i) => (
@@ -38,16 +38,17 @@ export function WinRateDonut({ wins, draws, losses }: WinRateDonutProps) {
             ))}
             <Label
               position="center"
-              fill="#f5f5f5"
-              fontSize={20}
+              fill="#e4e4e7"
+              fontSize={18}
               fontWeight="bold"
+              fontFamily="monospace"
               value={`${winRate}%`}
             />
           </Pie>
         </PieChart>
       </ResponsiveContainer>
-      <p className="text-sm text-muted-foreground">
-        {wins}승 {draws}무 {losses}패
+      <p className="font-mono text-xs text-muted-foreground">
+        {wins}W {draws}D {losses}L
       </p>
     </div>
   );

@@ -73,20 +73,22 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts 
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       {/* A: Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">
-          {user.nickname}{" "}
-          <span className="text-base font-normal text-muted-foreground">
-            Lv.{user.level}
-          </span>
-        </h1>
+        <div>
+          <h1 className="font-mono text-xl font-bold">
+            {user.nickname}
+            <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
+              Lv.{user.level}
+            </span>
+          </h1>
+        </div>
         <select
           value={limit}
           onChange={(e) => changeParam("limit", e.target.value)}
-          className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+          className="h-7 rounded-md border border-border/30 bg-card/30 px-2 font-mono text-xs text-muted-foreground"
         >
           {LIMITS.map((l) => (
             <option key={l} value={l}>
-              최근 {l}경기
+              최근 {l}G
             </option>
           ))}
         </select>

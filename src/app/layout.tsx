@@ -21,20 +21,22 @@ export const metadata: Metadata = {
 
 function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          FCLab
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-md">
+      <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="font-mono text-sm font-bold tracking-wider text-primary">
+            FC<span className="text-foreground">Lab</span>
+          </span>
+          <span className="hidden text-[10px] font-mono text-muted-foreground sm:inline">
+            v2.0
+          </span>
         </Link>
-        <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-          <Link href="/meta" className="hover:text-foreground transition-colors">
-            메타
+        <nav className="flex items-center gap-5 font-mono text-xs text-muted-foreground">
+          <Link href="/meta" className="hover:text-primary transition-colors">
+            /meta
           </Link>
-          <Link
-            href="/about"
-            className="hover:text-foreground transition-colors"
-          >
-            소개
+          <Link href="/about" className="hover:text-primary transition-colors">
+            /about
           </Link>
         </nav>
       </div>
@@ -55,8 +57,8 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Header />
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-          &copy; FCLab &middot; Nexon OpenAPI 기반
+        <footer className="border-t border-border/50 py-4 text-center font-mono text-[10px] text-muted-foreground/60">
+          FCLab &middot; Nexon OpenAPI &middot; Not affiliated with Nexon
         </footer>
       </body>
     </html>

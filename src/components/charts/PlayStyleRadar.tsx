@@ -32,24 +32,26 @@ export function PlayStyleRadar({ style, rankerStyle }: PlayStyleRadarProps) {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveContainer width="100%" height={240}>
       <RadarChart data={data}>
-        <PolarGrid stroke="#374151" />
+        <PolarGrid stroke="#1e293b" />
         <PolarAngleAxis
           dataKey="axis"
-          tick={{ fill: "#9ca3af", fontSize: 12 }}
+          tick={{ fill: "#64748b", fontSize: 11, fontFamily: "monospace" }}
         />
         <PolarRadiusAxis
           angle={90}
           domain={[0, 100]}
-          tick={{ fill: "#6b7280", fontSize: 10 }}
+          tick={false}
+          axisLine={false}
         />
         <Radar
           name="나"
           dataKey="value"
-          stroke="#3b82f6"
-          fill="#3b82f6"
-          fillOpacity={0.3}
+          stroke="#00d68f"
+          fill="#00d68f"
+          fillOpacity={0.15}
+          strokeWidth={2}
         />
         {rankerStyle && (
           <Radar
@@ -57,16 +59,17 @@ export function PlayStyleRadar({ style, rankerStyle }: PlayStyleRadarProps) {
             dataKey="ranker"
             stroke="#f59e0b"
             fill="#f59e0b"
-            fillOpacity={0.15}
+            fillOpacity={0.08}
             strokeDasharray="4 2"
           />
         )}
         <Tooltip
           contentStyle={{
-            backgroundColor: "#1f2937",
-            border: "1px solid #374151",
-            borderRadius: "8px",
-            fontSize: "12px",
+            backgroundColor: "#0f172a",
+            border: "1px solid #1e293b",
+            borderRadius: "6px",
+            fontSize: "11px",
+            fontFamily: "monospace",
           }}
         />
       </RadarChart>

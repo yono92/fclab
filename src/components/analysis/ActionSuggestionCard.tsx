@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ActionSuggestion } from "@/lib/action-rules";
 
 interface ActionSuggestionCardProps {
@@ -8,9 +7,9 @@ interface ActionSuggestionCardProps {
 }
 
 const priorityConfig = {
-  high: { icon: "🔴", label: "HIGH" },
-  medium: { icon: "🟡", label: "MED" },
-  low: { icon: "🟢", label: "LOW" },
+  high: { dot: "bg-red-500", label: "HIGH" },
+  medium: { dot: "bg-yellow-500", label: "MED" },
+  low: { dot: "bg-emerald-500", label: "LOW" },
 } as const;
 
 export function ActionSuggestionCard({
@@ -19,29 +18,29 @@ export function ActionSuggestionCard({
   if (suggestions.length === 0) return null;
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">💡 플레이 개선 제안</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <div className="rounded-lg border border-border/30 bg-card/50 p-4">
+      <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-3">
+        Action Suggestions
+      </p>
+      <div className="space-y-2.5">
         {suggestions.map((s) => {
           const config = priorityConfig[s.priority];
           return (
-            <div key={s.id} className="space-y-1">
+            <div key={s.id} className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <span>{config.icon}</span>
-                <span className="text-xs font-medium text-muted-foreground">
-                  [{config.label}]
+                <div className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {config.label}
                 </span>
-                <span className="text-sm font-medium">{s.suggestion}</span>
+                <span className="text-sm">{s.suggestion}</span>
               </div>
-              <p className="pl-8 text-xs text-muted-foreground">
-                근거: {s.evidence}
+              <p className="pl-5 font-mono text-[10px] text-muted-foreground">
+                → {s.evidence}
               </p>
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

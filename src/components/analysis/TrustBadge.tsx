@@ -1,7 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { reliabilityGrade } from "@/lib/stats";
 
 interface TrustBadgeProps {
@@ -13,33 +11,27 @@ interface TrustBadgeProps {
 
 const gradeConfig = {
   insufficient: {
-    label: "데이터 부족",
-    icon: "⚠",
-    barClass: "bg-red-500",
-    badgeVariant: "destructive" as const,
-    barWidth: "w-1/4",
+    label: "INSUFFICIENT",
+    dot: "bg-red-500",
+    text: "text-red-400",
   },
   limited: {
-    label: "제한적",
-    icon: "△",
-    barClass: "bg-yellow-500",
-    badgeVariant: "outline" as const,
-    barWidth: "w-2/3",
+    label: "LIMITED",
+    dot: "bg-yellow-500",
+    text: "text-yellow-400",
   },
   sufficient: {
-    label: "충분",
-    icon: "✅",
-    barClass: "bg-green-500",
-    badgeVariant: "default" as const,
-    barWidth: "w-full",
+    label: "SUFFICIENT",
+    dot: "bg-emerald-500",
+    text: "text-emerald-400",
   },
 };
 
-function formatDate(d: Date): string {
+function fmt(d: Date): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-function formatDateTime(d: Date): string {
+function fmtTime(d: Date): string {
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
 
@@ -53,31 +45,15 @@ export function TrustBadge({
   const config = gradeConfig[grade];
 
   return (
-    <Card>
-      <CardContent className="pt-4 pb-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>📊</span>
-          <span>{sampleSize}경기</span>
-          <span>·</span>
-          <span>{matchType}</span>
-          <span>·</span>
-          <span>
-            {formatDate(dateRange[0])}~{formatDate(dateRange[1])}
-          </span>
-          <span>·</span>
-          <span>갱신 {formatDateTime(lastUpdated)}</span>
-        </div>
-        <div className="mt-2 flex items-center gap-3">
-          <div className="h-2 flex-1 rounded-full bg-muted">
-            <div
-              className={`h-full rounded-full ${config.barClass} ${config.barWidth} transition-all`}
-            />
-          </div>
-          <Badge variant={config.badgeVariant}>
-            {config.icon} {config.label}
-          </Badge>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-3 rounded-md border border-border/30 bg-card/30 px-3 py-2 font-mono text-xs">
+      <div className="flex items-center gap-1.5">
+        <div className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+        <span className={config.text}>{config.label}</span>
+      </div>
+      <span className="text-muted-foreground/50">|</span>
+      <span className="text-muted-foreground">
+        {sampleSize}G · {matchType} · {fmt(dateRange[0])}~{fmt(dateRange[1])} · updated {fmtTime(lastUpdated)}
+      </span>
+    </div>
   );
 }
