@@ -32,12 +32,16 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
 
 # vercel
 .vercel
 
 # mcp config (contains local paths)
 .mcp.json
+
+# local Codex skill lockfile
+skills-lock.json
 
 # scraped raw data
 docs/scraped-api-raw.json
