@@ -6,11 +6,19 @@ import { ShootingHeatmap } from "@/components/charts/ShootingHeatmap";
 import { GoalTimeline } from "@/components/charts/GoalTimeline";
 import type { MatchResponse, MatchInfo } from "@/types/nexon";
 
+const POSITION_MAP: Record<number, string> = {
+  0: "GK", 1: "SW", 2: "RWB", 3: "RB", 4: "RCB", 5: "CB", 6: "LCB", 7: "LB", 8: "LWB",
+  9: "RDM", 10: "CDM", 11: "LDM", 12: "RM", 13: "RCM", 14: "CM", 15: "LCM", 16: "LM",
+  17: "RAM", 18: "CAM", 19: "LAM", 20: "RF", 21: "CF", 22: "LF", 23: "RW", 24: "RS",
+  25: "ST", 26: "LS", 27: "LW", 28: "SUB",
+};
+
 interface MatchDetailViewProps {
   match: MatchResponse;
   me: MatchInfo;
   opponent: MatchInfo | null;
   nickname: string;
+  playerNameMap?: Record<string, string>;
 }
 
 interface ComparisonRow {
@@ -56,7 +64,7 @@ function ComparisonBar({ label, myValue, opValue, format }: ComparisonRow) {
   );
 }
 
-export function MatchDetailView({ match, me, opponent, nickname }: MatchDetailViewProps) {
+export function MatchDetailView({ match, me, opponent, nickname, playerNameMap = {} }: MatchDetailViewProps) {
   const date = new Date(match.matchDate);
   const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
@@ -184,7 +192,7 @@ export function MatchDetailView({ match, me, opponent, nickname }: MatchDetailVi
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 pr-3">spId</th>
+                  <th className="pb-2 pr-3">선수</th>
                   <th className="pb-2 pr-3">포지션</th>
                   <th className="pb-2 pr-3">골</th>
                   <th className="pb-2 pr-3">어시</th>
@@ -197,8 +205,14 @@ export function MatchDetailView({ match, me, opponent, nickname }: MatchDetailVi
                   .sort((a, b) => b.status.spRating - a.status.spRating)
                   .map((p) => (
                     <tr key={p.spId} className="border-b border-border/50">
-                      <td className="py-2 pr-3 font-mono text-xs">{p.spId}</td>
-                      <td className="py-2 pr-3">{p.spPosition}</td>
+                      <td className="py-2 pr-3">
+                        <span className="text-sm">{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <span className="rounded bg-muted/50 px-1.5 py-0.5 font-mono text-[10px]">
+                          {POSITION_MAP[p.spPosition] ?? `P${p.spPosition}`}
+                        </span>
+                      </td>
                       <td className="py-2 pr-3">{p.status.goal}</td>
                       <td className="py-2 pr-3">{p.status.assist}</td>
                       <td className="py-2 pr-3">

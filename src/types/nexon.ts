@@ -7,6 +7,10 @@
  */
 import { z } from "zod";
 
+/** Nexon API returns null or undefined for some numeric fields */
+const n = () => z.number().nullable().optional().transform((v) => v ?? 0);
+const s = () => z.string().nullable().optional().transform((v) => v ?? "");
+
 // ============================================================================
 // 공통
 // ============================================================================
@@ -69,138 +73,138 @@ export type TradeList = z.infer<typeof TradeListSchema>;
 
 /** 매치 내 선수 개별 스탯 */
 export const PlayerStatusSchema = z.object({
-  shoot: z.number(),
-  effectiveShoot: z.number(),
-  assist: z.number(),
-  goal: z.number(),
-  dribble: z.number(),
-  intercept: z.number(),
-  defending: z.number(),
-  passTry: z.number(),
-  passSuccess: z.number(),
-  dribbleTry: z.number(),
-  dribbleSuccess: z.number(),
-  ballPossesionTry: z.number(),
-  ballPossesionSuc: z.number(),
-  aerialTry: z.number(),
-  aerialSuccess: z.number(),
-  blockTry: z.number(),
-  block: z.number(),
-  tackleTry: z.number(),
-  tackle: z.number(),
-  yellowCards: z.number(),
-  redCards: z.number(),
-  spRating: z.number(),
+  shoot: n(),
+  effectiveShoot: n(),
+  assist: n(),
+  goal: n(),
+  dribble: n(),
+  intercept: n(),
+  defending: n(),
+  passTry: n(),
+  passSuccess: n(),
+  dribbleTry: n(),
+  dribbleSuccess: n(),
+  ballPossesionTry: n(),
+  ballPossesionSuc: n(),
+  aerialTry: n(),
+  aerialSuccess: n(),
+  blockTry: n(),
+  block: n(),
+  tackleTry: n(),
+  tackle: n(),
+  yellowCards: n(),
+  redCards: n(),
+  spRating: n(),
 });
 export type PlayerStatus = z.infer<typeof PlayerStatusSchema>;
 
 export const MatchPlayerSchema = z.object({
-  spId: z.number(),
-  spPosition: z.number(),
-  spGrade: z.number(),
+  spId: n(),
+  spPosition: n(),
+  spGrade: n(),
   status: PlayerStatusSchema,
 });
 export type MatchPlayer = z.infer<typeof MatchPlayerSchema>;
 
 /** 슈팅 상세 */
 export const ShootDetailItemSchema = z.object({
-  goalTime: z.number(),
-  x: z.number(),
-  y: z.number(),
-  type: z.number(),
-  result: z.number(),
-  spId: z.number(),
-  spGrade: z.number(),
-  spLevel: z.number(),
+  goalTime: n(),
+  x: n(),
+  y: n(),
+  type: n(),
+  result: n(),
+  spId: n(),
+  spGrade: n(),
+  spLevel: n(),
   spIdType: z.boolean().optional(),
-  assist: z.boolean(),
-  assistSpI: z.number().optional(),
-  assistSpId: z.number().optional(),
-  assistX: z.number(),
-  assistY: z.number(),
-  hitPost: z.boolean(),
-  inPenalty: z.boolean(),
+  assist: z.boolean().nullable().optional().transform((v) => v ?? false),
+  assistSpI: n(),
+  assistSpId: n(),
+  assistX: n(),
+  assistY: n(),
+  hitPost: z.boolean().nullable().optional().transform((v) => v ?? false),
+  inPenalty: z.boolean().nullable().optional().transform((v) => v ?? false),
 });
 export type ShootDetailItem = z.infer<typeof ShootDetailItemSchema>;
 
 /** 슈팅 요약 */
 export const ShootSummarySchema = z.object({
-  shootTotal: z.number(),
-  effectiveShootTotal: z.number(),
-  shootOutScore: z.number(),
-  goalTotal: z.number(),
-  goalTotalDisplay: z.number(),
-  ownGoal: z.number(),
-  shootHeading: z.number(),
-  goalHeading: z.number(),
-  shootFreekick: z.number(),
-  goalFreekick: z.number(),
-  shootInPenalty: z.number(),
-  goalInPenalty: z.number(),
-  shootOutPenalty: z.number(),
-  goalOutPenalty: z.number(),
-  shootPenaltyKick: z.number(),
-  goalPenaltyKick: z.number(),
+  shootTotal: n(),
+  effectiveShootTotal: n(),
+  shootOutScore: n(),
+  goalTotal: n(),
+  goalTotalDisplay: n(),
+  ownGoal: n(),
+  shootHeading: n(),
+  goalHeading: n(),
+  shootFreekick: n(),
+  goalFreekick: n(),
+  shootInPenalty: n(),
+  goalInPenalty: n(),
+  shootOutPenalty: n(),
+  goalOutPenalty: n(),
+  shootPenaltyKick: n(),
+  goalPenaltyKick: n(),
 });
 export type ShootSummary = z.infer<typeof ShootSummarySchema>;
 
 /** 패스 요약 */
 export const PassSummarySchema = z.object({
-  passTry: z.number(),
-  passSuccess: z.number(),
-  shortPassTry: z.number(),
-  shortPassSuccess: z.number(),
-  longPassTry: z.number(),
-  longPassSuccess: z.number(),
-  bouncingLobPassTry: z.number(),
-  bouncingLobPassSuccess: z.number(),
-  drivenGroundPassTry: z.number(),
-  drivenGroundPassSuccess: z.number(),
-  throughPassTry: z.number(),
-  throughPassSuccess: z.number(),
-  lobbedThroughPassTry: z.number(),
-  lobbedThroughPassSuccess: z.number(),
+  passTry: n(),
+  passSuccess: n(),
+  shortPassTry: n(),
+  shortPassSuccess: n(),
+  longPassTry: n(),
+  longPassSuccess: n(),
+  bouncingLobPassTry: n(),
+  bouncingLobPassSuccess: n(),
+  drivenGroundPassTry: n(),
+  drivenGroundPassSuccess: n(),
+  throughPassTry: n(),
+  throughPassSuccess: n(),
+  lobbedThroughPassTry: n(),
+  lobbedThroughPassSuccess: n(),
 });
 export type PassSummary = z.infer<typeof PassSummarySchema>;
 
 /** 수비 요약 */
 export const DefenceSummarySchema = z.object({
-  blockTry: z.number(),
-  blockSuccess: z.number(),
-  tackleTry: z.number(),
-  tackleSuccess: z.number(),
+  blockTry: n(),
+  blockSuccess: n(),
+  tackleTry: n(),
+  tackleSuccess: n(),
 });
 export type DefenceSummary = z.infer<typeof DefenceSummarySchema>;
 
 /** 매치 상세 - 유저별 정보 */
 export const MatchDetailSchema = z.object({
-  seasonId: z.number(),
-  matchResult: z.string(),
-  matchEndType: z.number(),
-  systemPause: z.number(),
-  foul: z.number(),
-  injury: z.number(),
-  redCards: z.number(),
-  yellowCards: z.number(),
-  dribble: z.number(),
-  cornerKick: z.number(),
-  possession: z.number(),
-  OffsideCount: z.number(),
-  averageRating: z.number(),
-  controller: z.string(),
+  seasonId: n(),
+  matchResult: s(),
+  matchEndType: n(),
+  systemPause: n(),
+  foul: n(),
+  injury: n(),
+  redCards: n(),
+  yellowCards: n(),
+  dribble: n(),
+  cornerKick: n(),
+  possession: n(),
+  OffsideCount: n(),
+  averageRating: n(),
+  controller: s(),
 });
 export type MatchDetailInfo = z.infer<typeof MatchDetailSchema>;
 
 /** 매치 정보 - 유저 한 명의 전체 매치 데이터 */
 export const MatchInfoSchema = z.object({
   ouid: z.string(),
-  nickname: z.string(),
+  nickname: z.string().nullable().optional().transform((v) => v ?? ""),
   matchDetail: MatchDetailSchema,
   shoot: ShootSummarySchema,
-  shootDetail: z.array(ShootDetailItemSchema),
+  shootDetail: z.array(ShootDetailItemSchema).optional().default([]),
   pass: PassSummarySchema,
   defence: DefenceSummarySchema,
-  player: z.array(MatchPlayerSchema),
+  player: z.array(MatchPlayerSchema).optional().default([]),
 });
 export type MatchInfo = z.infer<typeof MatchInfoSchema>;
 

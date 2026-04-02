@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { analyzePlayer, getMatchTypeCounts } from "@/lib/analyze";
 import { createNexonClient, NexonApiError } from "@/lib/nexon-api";
 import { persistAnalysis } from "@/lib/persist-analysis";
+import { resolvePlayerNames, getPositionName } from "@/lib/resolve-meta";
 import { Dashboard } from "./dashboard";
 import Link from "next/link";
 
@@ -45,6 +46,14 @@ export default async function PlayerDashboardPage({
     // DB에 비동기 저장 (실패해도 대시보드는 정상 표시)
     persistAnalysis(result.user, result.matches, result.myStats).catch(() => {});
 
+    // Resolve player names from Supabase meta
+    const allSpIds = result.playerStats.map((p) => p.spId);
+    const nameMap = await resolvePlayerNames(allSpIds).catch(() => new Map<number, string>());
+    const playerNameMap: Record<string, string> = {};
+    for (const [id, name] of nameMap) {
+      playerNameMap[String(id)] = name;
+    }
+
     return (
       <Dashboard
         result={result}
@@ -52,6 +61,7 @@ export default async function PlayerDashboardPage({
         matchtype={matchtype}
         limit={limit}
         matchTypeCounts={matchTypeCounts}
+        playerNameMap={playerNameMap}
       />
     );
   } catch (err) {

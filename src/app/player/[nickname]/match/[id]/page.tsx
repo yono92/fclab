@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { createNexonClient, NexonApiError } from "@/lib/nexon-api";
+import { resolvePlayerNames } from "@/lib/resolve-meta";
 import { MatchDetailView } from "./match-detail";
 import Link from "next/link";
 
@@ -33,12 +34,21 @@ export default async function MatchDetailPage({ params }: PageProps) {
       throw new NexonApiError(404, "이 매치에서 유저 정보를 찾을 수 없습니다");
     }
 
+    // Resolve player names
+    const allSpIds = me.player.map((p) => p.spId);
+    const nameMap = await resolvePlayerNames(allSpIds).catch(() => new Map<number, string>());
+    const playerNameMap: Record<string, string> = {};
+    for (const [spId, name] of nameMap) {
+      playerNameMap[String(spId)] = name;
+    }
+
     return (
       <MatchDetailView
         match={match}
         me={me}
         opponent={opponent}
         nickname={decodedNick}
+        playerNameMap={playerNameMap}
       />
     );
   } catch (err) {

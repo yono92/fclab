@@ -22,13 +22,14 @@ interface DashboardProps {
   matchtype: number;
   limit: number;
   matchTypeCounts: MatchTypeCount[];
+  playerNameMap?: Record<string, string>;
 }
 
 const pct = (v: number) => (v * 100).toFixed(1);
 
 const LIMITS = [10, 20, 50, 100];
 
-export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts }: DashboardProps) {
+export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts, playerNameMap = {} }: DashboardProps) {
   const router = useRouter();
   const {
     user,
@@ -311,7 +312,7 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts 
                     <thead>
                       <tr className="border-b text-left text-muted-foreground">
                         <th className="pb-2 pr-4">#</th>
-                        <th className="pb-2 pr-4">spId</th>
+                        <th className="pb-2 pr-4">선수</th>
                         <th className="pb-2 pr-4">출전</th>
                         <th className="pb-2 pr-4">골/경기</th>
                         <th className="pb-2 pr-4">어시/경기</th>
@@ -322,7 +323,10 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts 
                       {playerStats.map((p, i) => (
                         <tr key={p.spId} className="border-b border-border/50">
                           <td className="py-2 pr-4 text-muted-foreground">{i + 1}</td>
-                          <td className="py-2 pr-4 font-mono text-xs">{p.spId}</td>
+                          <td className="py-2 pr-4">
+                            <span className="text-sm">{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
+                            <span className="ml-1.5 font-mono text-[10px] text-muted-foreground/50">{p.spId}</span>
+                          </td>
                           <td className="py-2 pr-4">{p.appearances}</td>
                           <td className="py-2 pr-4">{p.avgGoal.toFixed(2)}</td>
                           <td className="py-2 pr-4">{p.avgAssist.toFixed(2)}</td>
@@ -352,6 +356,7 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts 
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="pb-2 pr-3">날짜</th>
+                  <th className="pb-2 pr-3">상대</th>
                   <th className="pb-2 pr-3">결과</th>
                   <th className="pb-2 pr-3">점유</th>
                   <th className="pb-2 pr-3">슈팅(유효)</th>
@@ -380,6 +385,9 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts 
                     >
                       <td className="py-2 pr-3 text-muted-foreground">
                         {date.getMonth() + 1}/{date.getDate()}
+                      </td>
+                      <td className="py-2 pr-3 text-xs text-muted-foreground max-w-[100px] truncate">
+                        {m.opponentNickname}
                       </td>
                       <td className={`py-2 pr-3 font-medium ${resultColor}`}>
                         {m.goalTotalDisplay}:{m.opponentGoalDisplay} {m.result}

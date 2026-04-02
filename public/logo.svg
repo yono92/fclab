@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 32">
+  <!-- Terminal brackets -->
+  <text x="0" y="24" font-family="monospace" font-size="16" fill="#00d68f" opacity="0.3">[</text>
+  <!-- Prompt hint -->
+  <text x="10" y="14" font-family="monospace" font-size="6" fill="#00d68f" opacity="0.4">&gt;_</text>
+  <!-- FCLab -->
+  <text x="11" y="25" font-family="monospace" font-weight="900" font-size="20" fill="#00d68f">FC<tspan fill="#e4e4e7">Lab</tspan></text>
+  <!-- Bracket close -->
+  <text x="96" y="24" font-family="monospace" font-size="16" fill="#00d68f" opacity="0.3">]</text>
+  <!-- Cursor -->
+  <rect x="104" y="12" width="2" height="13" fill="#00d68f" opacity="0.5">
+    <animate attributeName="opacity" values="0.5;0;0.5" dur="1.2s" repeatCount="indefinite"/>
+  </rect>
+</svg>

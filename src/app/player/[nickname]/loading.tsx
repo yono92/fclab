@@ -1,43 +1,42 @@
 export default function Loading() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-      {/* Header skeleton */}
-      <div className="flex items-center justify-between">
-        <div className="h-8 w-48 animate-pulse rounded bg-muted" />
-        <div className="flex gap-2">
-          <div className="h-8 w-24 animate-pulse rounded bg-muted" />
-          <div className="h-8 w-28 animate-pulse rounded bg-muted" />
+    <div className="mx-auto max-w-6xl px-4 py-16">
+      <div className="flex flex-col items-center justify-center gap-6">
+        {/* Spinner */}
+        <div className="relative h-14 w-14">
+          <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
+          <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-primary" />
         </div>
-      </div>
 
-      {/* TrustBadge skeleton */}
-      <div className="h-16 animate-pulse rounded-lg bg-muted" />
-
-      {/* Summary skeleton */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="h-48 animate-pulse rounded-lg bg-muted" />
-        <div className="h-48 animate-pulse rounded-lg bg-muted" />
-      </div>
-
-      {/* Tabs skeleton */}
-      <div className="h-10 w-64 animate-pulse rounded bg-muted" />
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="h-64 animate-pulse rounded-lg bg-muted" />
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-10 animate-pulse rounded bg-muted" />
-          ))}
+        {/* Status */}
+        <div className="space-y-2 text-center">
+          <p className="font-mono text-sm text-foreground">
+            <span className="text-primary">$</span> analyzing player data...
+          </p>
+          <p className="font-mono text-xs text-muted-foreground animate-pulse">
+            매치 기록 수집 & 통계 분석 중
+          </p>
         </div>
-      </div>
 
-      {/* Suggestions skeleton */}
-      <div className="h-32 animate-pulse rounded-lg bg-muted" />
-
-      {/* Match list skeleton */}
-      <div className="space-y-2">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-10 animate-pulse rounded bg-muted" />
-        ))}
+        {/* Terminal log */}
+        <div className="mt-4 w-full max-w-sm rounded-lg border border-border/30 bg-card/50 p-4 font-mono text-[11px] text-muted-foreground">
+          <div className="space-y-1.5">
+            <p>
+              <span className="text-primary">{">"}</span> connecting to api...
+              <span className="ml-1 text-green-400">ok</span>
+            </p>
+            <p>
+              <span className="text-primary">{">"}</span> loading match records...
+              <span className="ml-1 animate-pulse">_</span>
+            </p>
+            <p className="animate-pulse text-muted-foreground/50">
+              <span className="text-primary/50">{">"}</span> computing statistics...
+            </p>
+            <p className="animate-pulse text-muted-foreground/30">
+              <span className="text-primary/30">{">"}</span> generating suggestions...
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

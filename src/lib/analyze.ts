@@ -128,6 +128,7 @@ export interface RecentMatch {
   goalTotal: number;
   goalTotalDisplay: number;
   opponentGoalDisplay: number;
+  opponentNickname: string;
   isOutlier: boolean;
 }
 
@@ -143,6 +144,24 @@ function extractMyInfo(match: MatchResponse, ouid: string): MatchInfo | null {
   return match.matchInfo.find((info) => info.ouid === ouid) ?? null;
 }
 
+/** Run promises in batches to respect rate limits */
+async function batchedFetch<T>(
+  items: (() => Promise<T>)[],
+  batchSize: number,
+  delayMs: number = 300
+): Promise<T[]> {
+  const results: T[] = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchResults = await Promise.all(batch.map((fn) => fn()));
+    results.push(...batchResults);
+    if (i + batchSize < items.length) {
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+  return results;
+}
+
 // ============================================================================
 // Match type counts
 // ============================================================================
@@ -156,6 +175,7 @@ export interface MatchTypeCount {
 const MAIN_MATCH_TYPES = [
   { matchtype: 50, desc: "공식" },
   { matchtype: 52, desc: "감독" },
+  { matchtype: 30, desc: "공식친선" },
   { matchtype: 40, desc: "친선" },
   { matchtype: 204, desc: "볼타" },
   { matchtype: 214, desc: "커스텀" },
@@ -166,20 +186,19 @@ export async function getMatchTypeCounts(
 ): Promise<MatchTypeCount[]> {
   const client = createNexonClient();
 
-  const results = await Promise.all(
-    MAIN_MATCH_TYPES.map(async (mt) => {
-      try {
-        const ids = await client.getUserMatch({
-          ouid,
-          matchtype: mt.matchtype,
-          limit: 100,
-        });
-        return { ...mt, count: ids.length };
-      } catch {
-        return { ...mt, count: 0 };
-      }
-    })
-  );
+  const results: MatchTypeCount[] = [];
+  for (const mt of MAIN_MATCH_TYPES) {
+    try {
+      const ids = await client.getUserMatch({
+        ouid,
+        matchtype: mt.matchtype,
+        limit: 100,
+      });
+      results.push({ ...mt, count: ids.length });
+    } catch {
+      results.push({ ...mt, count: 0 });
+    }
+  }
 
   return results.sort((a, b) => b.count - a.count);
 }
@@ -209,20 +228,27 @@ export async function analyzePlayer(
   if (matchIds.length === 0) {
     const fallbackTypes = [52, 40, 50, 214, 215, 216].filter((t) => t !== matchtype);
     for (const ft of fallbackTypes) {
-      const ids = await client.getUserMatch({ ouid, matchtype: ft, limit });
-      if (ids.length > 0) {
-        matchIds = ids;
-        actualMatchtype = ft;
-        break;
+      try {
+        const ids = await client.getUserMatch({ ouid, matchtype: ft, limit });
+        if (ids.length > 0) {
+          matchIds = ids;
+          actualMatchtype = ft;
+          break;
+        }
+      } catch {
+        continue;
       }
     }
   }
 
-  // 2. Fetch match details (parallel, with error tolerance)
-  const matchPromises = matchIds.map((matchid) =>
-    client.getMatchDetail({ matchid }).catch(() => null)
+  // 2. Fetch match details (batched to respect rate limits)
+  const matchResults = await batchedFetch(
+    matchIds.map((matchid) => () =>
+      client.getMatchDetail({ matchid }).catch(() => null)
+    ),
+    3,
+    400
   );
-  const matchResults = await Promise.all(matchPromises);
   const matches = matchResults.filter(
     (m): m is MatchResponse => m !== null
   );
@@ -427,6 +453,7 @@ export async function analyzePlayer(
       goalTotal: my?.shoot.goalTotal ?? 0,
       goalTotalDisplay: my?.shoot.goalTotalDisplay ?? 0,
       opponentGoalDisplay: opponent?.shoot.goalTotalDisplay ?? 0,
+      opponentNickname: opponent?.nickname ?? "?",
       isOutlier: outlierIndices.includes(i),
     };
   });

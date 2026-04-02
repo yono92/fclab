@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
 
@@ -17,26 +18,19 @@ export const metadata: Metadata = {
   title: "FCLab — 통계로 증명하는 플레이 분석",
   description:
     "FC Online 전적 분석. AI 추측이 아닌, 통계적 근거 기반 실력 향상 분석.",
+  icons: { icon: "/favicon.svg" },
 };
 
 function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-primary/10 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-12 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="font-mono text-sm font-bold tracking-wider text-primary">
-            FC<span className="text-foreground">Lab</span>
-          </span>
-          <span className="hidden text-[10px] font-mono text-muted-foreground sm:inline">
-            v2.0
-          </span>
+        <Link href="/" className="flex items-center">
+          <Image src="/logo.svg" alt="FCLab" width={110} height={28} priority />
         </Link>
         <nav className="flex items-center gap-5 font-mono text-xs text-muted-foreground">
           <Link href="/meta" className="hover:text-primary transition-colors">
             /meta
-          </Link>
-          <Link href="/about" className="hover:text-primary transition-colors">
-            /about
           </Link>
         </nav>
       </div>
