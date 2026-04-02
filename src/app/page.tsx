@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
+import { MatrixRain } from "@/components/ui/matrix-rain";
 
 /* ASCII corner box wrapper */
 function DashedBox({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -236,7 +237,8 @@ export default function HomePage() {
 
   return (
     <div className="relative flex flex-1 flex-col items-center overflow-hidden">
-      {/* Grid background + scanlines */}
+      {/* Matrix rain + grid background + scanlines */}
+      <MatrixRain />
       <div className="pointer-events-none absolute inset-0 grid-bg" />
       <div className="pointer-events-none absolute inset-0 hero-gradient" />
       <Scanlines />

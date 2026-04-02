@@ -19,6 +19,19 @@ export const metadata: Metadata = {
   description:
     "FC Online 전적 분석. AI 추측이 아닌, 통계적 근거 기반 실력 향상 분석.",
   icons: { icon: "/favicon.svg" },
+  openGraph: {
+    title: "FCLab — 통계로 증명하는 플레이 분석",
+    description:
+      "FC Online 전적 분석. AI 추측이 아닌, 통계적 근거 기반 실력 향상 분석.",
+    siteName: "FCLab",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FCLab — 통계로 증명하는 플레이 분석",
+    description:
+      "FC Online 전적 분석. AI 추측이 아닌, 통계적 근거 기반 실력 향상 분석.",
+  },
 };
 
 function Header() {
