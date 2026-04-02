@@ -53,20 +53,34 @@ FC Online 유저를 위한 전적 검색 및 메타 분석 플랫폼
            → [Supabase 저장 & 집계]
 ```
 
-## Supabase 활용 계획
+## Supabase 활용 (구현 완료)
 
-### 테이블 (예상)
-- `users` - 검색된 유저 정보 캐시
-- `matches` - 매치 상세 데이터 캐시
-- `match_stats` - 집계된 매치 통계
-- `ranker_meta` - 랭커 선수 사용 데이터
-- `metadata_players` - 선수 메타데이터
-- `metadata_seasons` - 시즌 메타데이터
+### 테이블 (fclab 스키마)
+- `users` - 검색된 유저 정보 (ouid, nickname, level)
+- `user_max_divisions` - 유저별 역대 최고 등급
+- `matches` - 매치 메타데이터 (match_id, date, type, expires_at)
+- `match_user_stats` - 매치별 유저 상세 스탯 (50+ 컬럼)
+- `match_shoot_details` - 개별 슈팅 데이터 (x, y, result, time)
+- `match_player_stats` - 매치별 선수 스탯
+- `ranker_stats` - 랭커 선수 평균 스탯
+- `meta_match_types`, `meta_players` (~5만건), `meta_seasons`, `meta_positions`, `meta_divisions`
 
-### Edge Functions
-- Nexon API 프록시 (API Key 보호)
-- 데이터 동기화 크론잡
+### 뷰
+- `v_user_recent_stats` - 유저별 종합 집계 뷰
+
+### API Routes (Next.js)
+- `/api/nexon/[...path]` - Nexon API 프록시 (API Key 보호)
+- `/api/cron/sync-meta` - 메타데이터 동기화 (Bearer 토큰 인증)
 
 ### RLS (Row Level Security)
-- 공개 데이터: 누구나 읽기 가능
-- 관리 데이터: 관리자만 쓰기 가능
+- 모든 테이블: 공개 읽기 (anon + authenticated)
+- 쓰기: service_role 전용
+
+## 디자인 테마
+
+터미널/사이버펑크 컨셉:
+- **컬러**: 다크 배경 (oklch 0.11) + 프라이머리 사이버 그린 (#00D68F)
+- **폰트**: Geist Mono (코드/데이터), Geist Sans (본문)
+- **UI 요소**: 대시 보더 + ASCII 코너 마커, 터미널 프리픽스 ($, >, ✓, !)
+- **이펙트**: 매트릭스 코드 레인, CRT 스캔라인, 글로우, float 애니메이션
+- **로딩**: 통일된 터미널 프로그레스 UI (TerminalLoading 컴포넌트)

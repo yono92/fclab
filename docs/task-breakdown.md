@@ -2,12 +2,14 @@
 
 > 다른 Claude 세션(구현 에이전트)에 넘길 태스크 단위 및 순서
 > 각 태스크는 독립적으로 실행 가능하며, 의존관계를 명시함
+>
+> **현재 상태: Phase 0~3 전체 완료 (2026-04-02 기준)**
 
 ---
 
 ## Phase 0: 프로젝트 기반 (Task 1-3)
 
-### Task 1: Next.js 프로젝트 초기화
+### Task 1: Next.js 프로젝트 초기화 ✅
 **의존**: 없음
 **산출물**: 실행 가능한 빈 Next.js 프로젝트
 **지시사항**:
@@ -55,7 +57,7 @@
 
 ---
 
-### Task 2: Supabase 스키마 적용
+### Task 2: Supabase 스키마 적용 ✅
 **의존**: Supabase MCP 연결 (세션 재시작 필요)
 **산출물**: DB 테이블 생성 완료
 **지시사항**:
@@ -71,7 +73,7 @@
 
 ---
 
-### Task 3: Nexon API 클라이언트 + Zod 검증
+### Task 3: Nexon API 클라이언트 + Zod 검증 ✅
 **의존**: Task 1
 **산출물**: `src/lib/nexon-api.ts`, `src/types/nexon.ts`
 **지시사항**:
@@ -95,7 +97,7 @@
 
 ## Phase 1: 핵심 기능 (Task 4-9)
 
-### Task 4: 통계 함수 라이브러리 (TDD)
+### Task 4: 통계 함수 라이브러리 (TDD) ✅
 **의존**: Task 1
 **산출물**: `src/lib/stats.ts`, `src/__tests__/stats.test.ts`
 **지시사항**:
@@ -125,7 +127,7 @@ Constitution 원칙: Test-First. 테스트를 먼저 작성하고 구현.
 
 ---
 
-### Task 5: 액션 제안 규칙 엔진
+### Task 5: 액션 제안 규칙 엔진 ✅
 **의존**: Task 4
 **산출물**: `src/lib/action-rules.ts`, `src/__tests__/action-rules.test.ts`
 **지시사항**:
@@ -153,7 +155,7 @@ UserStats 인터페이스는 DB의 v_user_recent_stats + 추가 계산 지표.
 
 ---
 
-### Task 6: 플레이 스타일 분류
+### Task 6: 플레이 스타일 분류 ✅
 **의존**: Task 4
 **산출물**: `src/lib/play-style.ts`, `src/__tests__/play-style.test.ts`
 **지시사항**:
@@ -177,7 +179,7 @@ getMainStyle(style: PlayStyle): { name: string, score: number, description: stri
 
 ---
 
-### Task 7: 공통 UI 컴포넌트
+### Task 7: 공통 UI 컴포넌트 ✅
 **의존**: Task 1
 **산출물**: `src/components/analysis/` 하위 컴포넌트들
 **지시사항**:
@@ -209,7 +211,7 @@ docs/full-spec.md 섹션 8 참고. 4개 컴포넌트 구현:
 
 ---
 
-### Task 8: 슈팅 히트맵 컴포넌트
+### Task 8: 슈팅 히트맵 컴포넌트 ✅
 **의존**: Task 1
 **산출물**: `src/components/charts/ShootingHeatmap.tsx`
 **지시사항**:
@@ -246,7 +248,7 @@ Props:
 
 ---
 
-### Task 9: 유저 대시보드 페이지
+### Task 9: 유저 대시보드 페이지 ✅
 **의존**: Task 2, 3, 4, 5, 6, 7, 8 (모두)
 **산출물**: `src/app/player/[nickname]/page.tsx` + 관련 서버 액션
 **지시사항**:
@@ -284,7 +286,7 @@ Props:
 
 ## Phase 2: 확장 기능 (Task 10-12)
 
-### Task 10: 매치 상세 페이지
+### Task 10: 매치 상세 페이지 ✅
 **의존**: Task 9
 **산출물**: `src/app/player/[nickname]/match/[id]/page.tsx`
 **지시사항**:
@@ -296,7 +298,7 @@ Props:
 - 이상치 플래그 (평소와 다른 지표 하이라이트)
 ```
 
-### Task 11: 메타데이터 동기화 크론
+### Task 11: 메타데이터 동기화 크론 ✅
 **의존**: Task 2, 3
 **산출물**: Supabase Edge Function 또는 Vercel Cron
 **지시사항**:
@@ -305,7 +307,7 @@ Daily: matchtype, spid, seasonid, spposition, division JSON → DB UPSERT
 spid.json이 ~5만건으로 큼 → 배치 처리 (1000건 단위)
 ```
 
-### Task 12: 홈페이지 + 검색
+### Task 12: 홈페이지 + 검색 ✅
 **의존**: Task 1
 **산출물**: `src/app/page.tsx`
 **지시사항**:
@@ -321,11 +323,11 @@ docs/full-spec.md 섹션 1-2 참고.
 
 ## Phase 3: 분석 강화 (Task 13-14)
 
-### Task 13: 나 vs 랭커 비교
+### Task 13: 나 vs 랭커 비교 ✅
 **의존**: Task 9, 11
 **산출물**: `src/app/player/[nickname]/compare/page.tsx`
 
-### Task 14: 변화 추적 (트렌드)
+### Task 14: 변화 추적 (트렌드) ✅
 **의존**: Task 9
 **산출물**: `src/app/player/[nickname]/trend/page.tsx`
 
