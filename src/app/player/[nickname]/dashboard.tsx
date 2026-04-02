@@ -12,7 +12,8 @@ import { PlayStyleRadar } from "@/components/charts/PlayStyleRadar";
 import { WinRateDonut } from "@/components/charts/WinRateDonut";
 import { PassDistributionDonut } from "@/components/charts/PassDistributionDonut";
 import { ConcededTimeHistogram } from "@/components/charts/ConcededTimeHistogram";
-import type { AnalysisResult } from "@/lib/analyze";
+import type { AnalysisResult, MatchTypeCount } from "@/lib/analyze";
+import { MatchTypeChips } from "@/components/analysis/MatchTypeChips";
 import Link from "next/link";
 
 interface DashboardProps {
@@ -20,18 +21,14 @@ interface DashboardProps {
   nickname: string;
   matchtype: number;
   limit: number;
+  matchTypeCounts: MatchTypeCount[];
 }
 
 const pct = (v: number) => (v * 100).toFixed(1);
 
-const MATCH_TYPES = [
-  { value: 50, label: "공식경기" },
-  { value: 52, label: "감독모드" },
-];
-
 const LIMITS = [10, 20, 50, 100];
 
-export function Dashboard({ result, nickname, matchtype, limit }: DashboardProps) {
+export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts }: DashboardProps) {
   const router = useRouter();
   const {
     user,
@@ -76,46 +73,38 @@ export function Dashboard({ result, nickname, matchtype, limit }: DashboardProps
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       {/* A: Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {user.nickname}{" "}
-            <span className="text-base font-normal text-muted-foreground">
-              Lv.{user.level}
-            </span>
-          </h1>
-        </div>
-        <div className="flex gap-2">
-          <select
-            value={matchtype}
-            onChange={(e) => changeParam("matchtype", e.target.value)}
-            className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
-          >
-            {MATCH_TYPES.map((mt) => (
-              <option key={mt.value} value={mt.value}>
-                {mt.label}
-              </option>
-            ))}
-          </select>
-          <select
-            value={limit}
-            onChange={(e) => changeParam("limit", e.target.value)}
-            className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
-          >
-            {LIMITS.map((l) => (
-              <option key={l} value={l}>
-                최근 {l}경기
-              </option>
-            ))}
-          </select>
-        </div>
+        <h1 className="text-2xl font-bold">
+          {user.nickname}{" "}
+          <span className="text-base font-normal text-muted-foreground">
+            Lv.{user.level}
+          </span>
+        </h1>
+        <select
+          value={limit}
+          onChange={(e) => changeParam("limit", e.target.value)}
+          className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
+        >
+          {LIMITS.map((l) => (
+            <option key={l} value={l}>
+              최근 {l}경기
+            </option>
+          ))}
+        </select>
       </div>
+
+      {/* Match Type Chips */}
+      <MatchTypeChips
+        matchTypeCounts={matchTypeCounts}
+        selected={matchtype}
+        onSelect={(mt) => changeParam("matchtype", String(mt))}
+      />
 
       {/* B: TrustBadge */}
       <TrustBadge
         sampleSize={summary.totalMatches}
         dateRange={[firstDate, lastDate]}
         lastUpdated={new Date()}
-        matchType={MATCH_TYPES.find((m) => m.value === matchtype)?.label ?? ""}
+        matchType={matchTypeCounts.find((m) => m.matchtype === matchtype)?.desc ?? ""}
       />
 
       {/* C: Summary */}

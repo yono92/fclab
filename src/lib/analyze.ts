@@ -144,6 +144,47 @@ function extractMyInfo(match: MatchResponse, ouid: string): MatchInfo | null {
 }
 
 // ============================================================================
+// Match type counts
+// ============================================================================
+
+export interface MatchTypeCount {
+  matchtype: number;
+  desc: string;
+  count: number;
+}
+
+const MAIN_MATCH_TYPES = [
+  { matchtype: 50, desc: "공식" },
+  { matchtype: 52, desc: "감독" },
+  { matchtype: 40, desc: "친선" },
+  { matchtype: 204, desc: "볼타" },
+  { matchtype: 214, desc: "커스텀" },
+];
+
+export async function getMatchTypeCounts(
+  ouid: string
+): Promise<MatchTypeCount[]> {
+  const client = createNexonClient();
+
+  const results = await Promise.all(
+    MAIN_MATCH_TYPES.map(async (mt) => {
+      try {
+        const ids = await client.getUserMatch({
+          ouid,
+          matchtype: mt.matchtype,
+          limit: 100,
+        });
+        return { ...mt, count: ids.length };
+      } catch {
+        return { ...mt, count: 0 };
+      }
+    })
+  );
+
+  return results.sort((a, b) => b.count - a.count);
+}
+
+// ============================================================================
 // Main analysis function
 // ============================================================================
 
@@ -156,11 +197,26 @@ export async function analyzePlayer(
 
   // 1. Get user info
   const { ouid } = await client.getOuid({ nickname });
-  const [user, maxDivisions, matchIds] = await Promise.all([
+  const [user, maxDivisions] = await Promise.all([
     client.getUserBasic({ ouid }),
     client.getUserMaxDivision({ ouid }),
-    client.getUserMatch({ ouid, matchtype, limit }),
   ]);
+
+  // Try requested matchtype first, fallback to others if empty
+  let matchIds = await client.getUserMatch({ ouid, matchtype, limit });
+  let actualMatchtype = matchtype;
+
+  if (matchIds.length === 0) {
+    const fallbackTypes = [52, 40, 50, 214, 215, 216].filter((t) => t !== matchtype);
+    for (const ft of fallbackTypes) {
+      const ids = await client.getUserMatch({ ouid, matchtype: ft, limit });
+      if (ids.length > 0) {
+        matchIds = ids;
+        actualMatchtype = ft;
+        break;
+      }
+    }
+  }
 
   // 2. Fetch match details (parallel, with error tolerance)
   const matchPromises = matchIds.map((matchid) =>
@@ -177,7 +233,7 @@ export async function analyzePlayer(
     .filter((s): s is MatchInfo => s !== null);
 
   if (myStats.length === 0) {
-    throw new NexonApiError(404, "최근 경기가 없습니다");
+    throw new Error("최근 경기가 없습니다");
   }
 
   // 4. Compute summary

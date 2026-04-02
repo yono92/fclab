@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { analyzePlayer } from "@/lib/analyze";
-import { NexonApiError } from "@/lib/nexon-api";
+import { analyzePlayer, getMatchTypeCounts } from "@/lib/analyze";
+import { createNexonClient, NexonApiError } from "@/lib/nexon-api";
 import { persistAnalysis } from "@/lib/persist-analysis";
 import { Dashboard } from "./dashboard";
 import Link from "next/link";
@@ -26,10 +26,20 @@ export default async function PlayerDashboardPage({
   const { nickname } = await params;
   const sp = await searchParams;
   const decodedNick = decodeURIComponent(nickname);
-  const matchtype = Number(sp.matchtype) || 50;
   const limit = Number(sp.limit) || 20;
 
   try {
+    const client = createNexonClient();
+    const { ouid } = await client.getOuid({ nickname: decodedNick });
+
+    // Get match type counts for chips
+    const matchTypeCounts = await getMatchTypeCounts(ouid);
+
+    // Determine matchtype: explicit param > most played
+    const requestedType = sp.matchtype ? Number(sp.matchtype) : null;
+    const bestType = matchTypeCounts.find((mt) => mt.count > 0)?.matchtype;
+    const matchtype = requestedType ?? bestType ?? 50;
+
     const result = await analyzePlayer(decodedNick, matchtype, limit);
 
     // DB에 비동기 저장 (실패해도 대시보드는 정상 표시)
@@ -41,18 +51,19 @@ export default async function PlayerDashboardPage({
         nickname={decodedNick}
         matchtype={matchtype}
         limit={limit}
+        matchTypeCounts={matchTypeCounts}
       />
     );
   } catch (err) {
     const message =
-      err instanceof NexonApiError
-        ? err.code === 404
-          ? `"${decodedNick}" 닉네임의 유저를 찾을 수 없습니다`
-          : err.code === 429
-            ? "일시적 오류. 잠시 후 다시 시도해주세요"
-            : `API 오류 (${err.code})`
-        : err instanceof Error && err.message.includes("경기가 없습니다")
-          ? `최근 경기가 없습니다. 다른 매치 타입을 선택해보세요`
+      err instanceof Error && err.message.includes("경기가 없습니다")
+        ? "최근 경기가 없습니다. 다른 매치 타입을 선택해보세요"
+        : err instanceof NexonApiError
+          ? err.code === 404
+            ? `"${decodedNick}" 닉네임의 유저를 찾을 수 없습니다`
+            : err.code === 429
+              ? "일시적 오류. 잠시 후 다시 시도해주세요"
+              : `API 오류 (${err.code})`
           : "알 수 없는 오류가 발생했습니다";
 
     return (
