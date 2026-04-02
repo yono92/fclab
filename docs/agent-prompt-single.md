@@ -14,6 +14,14 @@
 프로젝트 경로: /Users/yoonsejong/Dev/yono/work/test/fclab/
 여기에 docs/, specs/, .specify/ 등 기획 문서가 있으니 절대 덮어쓰지 마.
 
+## MCP 도구
+너에게는 2개의 MCP가 연결되어 있어:
+1. **Supabase MCP** — DB 테이블 생성/조회/관리에 사용
+2. **Context7 MCP** — 라이브러리 최신 문서 조회에 사용
+   - 코드 작성 전에 Context7으로 해당 라이브러리의 최신 API/사용법을 확인해
+   - 예: Next.js App Router, Recharts, Supabase JS, Zod, shadcn/ui, Tailwind 등
+   - 사용법: resolve-library-id로 라이브러리 ID 조회 → query-docs로 문서 검색
+
 ## 프로젝트 이해를 위해 먼저 읽어야 할 파일들
 1. docs/full-spec.md — 종합 기획서 (화면설계, 통계로직, 유저플로우)
 2. docs/task-breakdown.md — 태스크 분할 및 의존관계
@@ -75,6 +83,9 @@ specs/001-core-schemas/contracts/nexon-api.types.ts → src/types/nexon.ts
 ```
 이전 라운드에서 프로젝트 셋업을 완료했어. 이제 핵심 라이브러리를 구현해줘.
 
+## Context7 활용
+코드 작성 전에 Context7 MCP로 vitest 최신 API를 확인해 (특히 describe, it, expect 패턴).
+
 ## 해야 할 것 3가지 (순서대로)
 
 ### 1. 통계 함수 (TDD) — src/lib/stats.ts + src/__tests__/stats.test.ts
@@ -116,6 +127,11 @@ classifyPlayStyle(stats) + getMainStyle(style).
 ```
 통계/분석 라이브러리가 완성됐어. 이제 API 클라이언트와 UI 컴포넌트를 만들어줘.
 
+## Context7 활용
+- Supabase JS 클라이언트 최신 API → Context7으로 확인
+- Recharts RadarChart 사용법 → Context7으로 확인
+- Next.js App Router의 route handler 패턴 → Context7으로 확인
+
 ## 1. Nexon API 클라이언트 — src/lib/nexon-api.ts
 
 docs/nexon-openapi.md + src/types/nexon.ts 참고.
@@ -156,6 +172,11 @@ charts/PlayStyleRadar.tsx — Recharts RadarChart 5축
 
 ```
 모든 기반이 완성됐어. 이제 FCLab의 핵심 2개 페이지를 구현해줘.
+
+## Context7 활용
+- Next.js Server Components + Suspense 패턴 → Context7으로 확인
+- Recharts PieChart, BarChart, LineChart 사용법 → Context7으로 확인
+- shadcn/ui Tabs, Select 컴포넌트 → Context7으로 확인
 
 ## 반드시 읽어: docs/page-specs.md (전체)
 
@@ -238,18 +259,69 @@ docs/page-specs.md 섹션 5.
 
 ---
 
-## 라운드 6 (선택): 마무리
+## 라운드 6: 마무리 + Git + Vercel 배포
 
 ```
-모든 기능이 구현됐어. 마무리 작업을 해줘.
+모든 기능이 구현됐어. 마무리 + Git 연동 + Vercel 배포까지 해줘.
 
-1. 전체 페이지 반응형 확인 (모바일/태블릿/데스크톱)
-2. 에러 바운더리 점검
-3. SEO 메타태그 (각 페이지별 title, description)
-4. 성능 최적화:
-   - 이미지 next/image 사용
-   - 동적 import (차트 컴포넌트 lazy load)
-   - Supabase 쿼리 최적화 (인덱스 활용 확인)
-5. Vercel 배포 설정
-6. 전체 vitest 통과 확인
+## 1. 코드 품질 마무리
+- 전체 페이지 반응형 확인 (모바일/태블릿/데스크톱)
+- 에러 바운더리 점검
+- SEO 메타태그 (각 페이지별 title, description)
+- 성능 최적화:
+  - 이미지 next/image 사용
+  - 동적 import (차트 컴포넌트 lazy load)
+  - Supabase 쿼리 최적화 (인덱스 활용 확인)
+- 전체 vitest 통과 확인
+
+## 2. Git 연동
+기존 레포: https://github.com/yono92/fclab.git
+이 레포에 기존 코드가 있는데, 새 프로젝트로 완전히 교체할 거야.
+
+순서:
+1. 현재 fclab 디렉토리의 .git 확인 (spec-kit이 init 했을 수 있음)
+2. .gitignore 정리:
+   - node_modules, .next, .env.local, .env, .mcp.json
+   - docs/scraped-api-raw.json, docs/scraped-api-detail.txt (스크래핑 원본)
+3. 기존 remote 제거하고 새로 연결:
+   git remote remove origin (있으면)
+   git remote add origin https://github.com/yono92/fclab.git
+4. 새 브랜치에서 작업:
+   git checkout -b v2-rebuild
+5. 전체 파일 add + commit:
+   "feat: FCLab v2 전면 리빌드 - 통계 기반 FC Online 플레이 분석 플랫폼"
+6. force push (기존 코드 교체):
+   git push -f origin v2-rebuild
+7. 나한테 확인 후 main에 머지할지 물어봐
+
+⚠ force push 전에 반드시 나한테 확인받아.
+
+## 3. Vercel 배포 (CLI)
+
+1. npx vercel login (이미 로그인돼 있을 수 있음)
+2. npx vercel link — 기존 fclab 프로젝트에 연결 (있으면) 또는 새로 생성
+3. 환경변수 설정 (Vercel에 등록):
+   npx vercel env add NEXON_API_KEY production
+   npx vercel env add NEXT_PUBLIC_SUPABASE_URL production
+   npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+   npx vercel env add SUPABASE_SERVICE_ROLE_KEY production
+   npx vercel env add CRON_SECRET production
+   - 값은 .env.local에서 읽어서 넣어
+   - preview, development 환경에도 동일하게 추가
+4. npx vercel deploy --prod
+5. 배포 URL 확인하고 나한테 알려줘
+6. vercel.json에 cron 설정 확인:
+   { "crons": [{ "path": "/api/cron/sync-meta", "schedule": "0 19 * * *" }] }
+
+## 4. 배포 후 검증
+- 배포된 URL에서 닉네임 검색 → 대시보드 동작 확인
+- API 프록시 동작 (NEXON_API_KEY가 서버에서만 사용되는지)
+- Supabase 연결 확인
+- 모바일에서 접속 테스트
+
+## 완료 기준
+- GitHub에 코드 push 완료
+- Vercel에 배포 완료 + 라이브 URL 확인
+- 환경변수 5개 모두 Vercel에 등록
+- 실제 닉네임 검색이 프로덕션에서 동작
 ```
