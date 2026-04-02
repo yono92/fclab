@@ -1,15 +1,13 @@
+import { TerminalLoading } from "@/components/ui/terminal-loading";
+
+const STEPS = [
+  { text: "connecting to nexon_api...", done: "[200 OK]" },
+  { text: "fetching match_detail...", done: "loaded" },
+  { text: "resolving player_names...", done: "done" },
+  { text: "parsing match_events...", done: "done" },
+  { text: "building detail_view...", done: "" },
+];
+
 export default function Loading() {
-  return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-      <div className="h-6 w-32 animate-pulse rounded bg-muted" />
-      <div className="h-32 animate-pulse rounded-lg bg-muted" />
-      <div className="h-48 animate-pulse rounded-lg bg-muted" />
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="h-64 animate-pulse rounded-lg bg-muted" />
-        <div className="h-64 animate-pulse rounded-lg bg-muted" />
-      </div>
-      <div className="h-16 animate-pulse rounded-lg bg-muted" />
-      <div className="h-48 animate-pulse rounded-lg bg-muted" />
-    </div>
-  );
+  return <TerminalLoading title="loading match detail..." steps={STEPS} />;
 }
