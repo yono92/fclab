@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TrustBadge } from "@/components/analysis/TrustBadge";
 import { PercentileGauge } from "@/components/analysis/PercentileGauge";
@@ -28,6 +27,19 @@ interface DashboardProps {
 const pct = (v: number) => (v * 100).toFixed(1);
 
 const LIMITS = [10, 20, 50, 100];
+
+function Section({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`relative rounded-lg border border-dashed border-primary/15 p-4 ${className}`}>
+      <span className="absolute -top-1 -left-1 font-mono text-[7px] text-primary/30">+</span>
+      <span className="absolute -top-1 -right-1 font-mono text-[7px] text-primary/30">+</span>
+      <span className="absolute -bottom-1 -left-1 font-mono text-[7px] text-primary/30">+</span>
+      <span className="absolute -bottom-1 -right-1 font-mono text-[7px] text-primary/30">+</span>
+      <p className="font-mono text-[9px] text-primary/40 mb-3">{label}</p>
+      {children}
+    </div>
+  );
+}
 
 export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts, playerNameMap = {} }: DashboardProps) {
   const router = useRouter();
@@ -74,18 +86,18 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts,
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
       {/* A: Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-mono text-xl font-bold">
-            {user.nickname}
-            <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
-              Lv.{user.level}
-            </span>
+        <div className="flex items-baseline gap-3">
+          <h1 className="font-mono text-xl font-black">
+            <span className="text-primary/50">$</span> {user.nickname}
           </h1>
+          <span className="font-mono text-[10px] text-muted-foreground/50">
+            Lv.{user.level}
+          </span>
         </div>
         <select
           value={limit}
           onChange={(e) => changeParam("limit", e.target.value)}
-          className="h-7 rounded-md border border-border/30 bg-card/30 px-2 font-mono text-xs text-muted-foreground"
+          className="h-7 rounded border border-dashed border-primary/20 bg-transparent px-2 font-mono text-xs text-muted-foreground hover:border-primary/40 transition-colors"
         >
           {LIMITS.map((l) => (
             <option key={l} value={l}>
@@ -112,8 +124,8 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts,
 
       {/* C: Summary */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardContent className="flex items-center gap-6 pt-6">
+        <Section label="SUMMARY.overview">
+          <div className="flex items-center gap-6">
             <WinRateDonut
               wins={summary.wins}
               draws={summary.draws}
@@ -130,37 +142,34 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts,
                   value={summary.goalsPerGame.toFixed(1)}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                승률 95% CI: {pct(summary.winRateCI.lower)}% ~ {pct(summary.winRateCI.upper)}%
+              <p className="font-mono text-[10px] text-muted-foreground/50">
+                win_rate_ci(0.95): [{pct(summary.winRateCI.lower)}%, {pct(summary.winRateCI.upper)}%]
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </Section>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">플레이 스타일</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center gap-4">
+        <Section label="STYLE.classification">
+          <div className="flex items-center gap-4">
             <div className="flex-1">
               <PlayStyleRadar style={playStyle} />
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold">{mainStyle.name}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-mono text-lg font-bold">{mainStyle.name}</p>
+              <p className="font-mono text-sm text-primary">
                 {mainStyle.score}/100
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {mainStyle.description}
               </p>
               {bestDivision && (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  역대 최고: Division {bestDivision.division}
+                <p className="mt-3 font-mono text-[10px] text-muted-foreground/50">
+                  max_division: {bestDivision.division}
                 </p>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </Section>
       </div>
 
       {/* D: Analysis Tabs */}
@@ -301,44 +310,26 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts,
 
         {/* Players Tab */}
         <TabsContent value="players">
-          <div className="mt-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">주요 사용 선수 TOP 10</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-muted-foreground">
-                        <th className="pb-2 pr-4">#</th>
-                        <th className="pb-2 pr-4">선수</th>
-                        <th className="pb-2 pr-4">출전</th>
-                        <th className="pb-2 pr-4">골/경기</th>
-                        <th className="pb-2 pr-4">어시/경기</th>
-                        <th className="pb-2">평점</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {playerStats.map((p, i) => (
-                        <tr key={p.spId} className="border-b border-border/50">
-                          <td className="py-2 pr-4 text-muted-foreground">{i + 1}</td>
-                          <td className="py-2 pr-4">
-                            <span className="text-sm">{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
-                            <span className="ml-1.5 font-mono text-[10px] text-muted-foreground/50">{p.spId}</span>
-                          </td>
-                          <td className="py-2 pr-4">{p.appearances}</td>
-                          <td className="py-2 pr-4">{p.avgGoal.toFixed(2)}</td>
-                          <td className="py-2 pr-4">{p.avgAssist.toFixed(2)}</td>
-                          <td className="py-2">{p.avgRating.toFixed(1)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Section label="PLAYER.top10" className="mt-4">
+            <div className="space-y-1">
+              <div className="grid grid-cols-[24px_1fr_48px_56px_56px_44px] gap-1 font-mono text-[9px] text-muted-foreground/50 border-b border-border/30 pb-1.5">
+                <span>#</span><span>선수</span><span className="text-center">출전</span><span className="text-right">골/G</span><span className="text-right">어시/G</span><span className="text-right">평점</span>
+              </div>
+              {playerStats.map((p, i) => {
+                const ratingColor = p.avgRating >= 7.0 ? "text-primary" : p.avgRating >= 5.0 ? "text-foreground" : "text-red-400";
+                return (
+                  <div key={p.spId} className="grid grid-cols-[24px_1fr_48px_56px_56px_44px] gap-1 items-center py-1.5 border-b border-border/15 text-sm">
+                    <span className="font-mono text-[10px] text-muted-foreground/40">{i + 1}</span>
+                    <span className="truncate">{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
+                    <span className="text-center font-mono text-xs">{p.appearances}</span>
+                    <span className="text-right font-mono text-xs">{p.avgGoal.toFixed(2)}</span>
+                    <span className="text-right font-mono text-xs">{p.avgAssist.toFixed(2)}</span>
+                    <span className={`text-right font-mono text-xs font-bold ${ratingColor}`}>{p.avgRating.toFixed(1)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </Section>
         </TabsContent>
       </Tabs>
 
@@ -346,85 +337,80 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts,
       <ActionSuggestionCard suggestions={suggestions} />
 
       {/* F: Recent Matches */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">최근 매치</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 pr-3">날짜</th>
-                  <th className="pb-2 pr-3">상대</th>
-                  <th className="pb-2 pr-3">결과</th>
-                  <th className="pb-2 pr-3">점유</th>
-                  <th className="pb-2 pr-3">슈팅(유효)</th>
-                  <th className="pb-2 pr-3">패스%</th>
-                  <th className="pb-2">평점</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentMatches.map((m) => {
-                  const date = new Date(m.matchDate);
-                  const resultColor =
-                    m.result === "승"
-                      ? "text-green-400"
-                      : m.result === "패"
-                        ? "text-red-400"
-                        : "text-muted-foreground";
-                  return (
-                    <tr
-                      key={m.matchId}
-                      className={`border-b border-border/50 cursor-pointer hover:bg-muted/30 ${m.isOutlier ? "bg-yellow-500/5" : ""}`}
-                      onClick={() =>
-                        router.push(
-                          `/player/${encodeURIComponent(nickname)}/match/${m.matchId}`
-                        )
-                      }
-                    >
-                      <td className="py-2 pr-3 text-muted-foreground">
-                        {date.getMonth() + 1}/{date.getDate()}
-                      </td>
-                      <td className="py-2 pr-3 text-xs text-muted-foreground max-w-[100px] truncate">
-                        {m.opponentNickname}
-                      </td>
-                      <td className={`py-2 pr-3 font-medium ${resultColor}`}>
-                        {m.goalTotalDisplay}:{m.opponentGoalDisplay} {m.result}
-                      </td>
-                      <td className="py-2 pr-3">{m.possession}%</td>
-                      <td className="py-2 pr-3">
-                        {m.shootTotal}({m.effectiveShoot})
-                      </td>
-                      <td className="py-2 pr-3">{m.passRate.toFixed(0)}%</td>
-                      <td className="py-2">{m.avgRating.toFixed(1)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {recentMatches.some((m) => m.isOutlier) && (
-            <p className="mt-2 text-xs text-yellow-400">
-              ⚠ 노란색 배경의 경기는 평소와 크게 다른 이상치 경기입니다
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      <Section label="MATCH.recent">
+        <div className="overflow-x-auto">
+          <table className="w-full font-mono text-xs">
+            <thead>
+              <tr className="border-b border-border/30 text-left text-[10px] text-muted-foreground/50">
+                <th className="pb-1.5 pr-3">날짜</th>
+                <th className="pb-1.5 pr-3">상대</th>
+                <th className="pb-1.5 pr-3">결과</th>
+                <th className="pb-1.5 pr-3">점유</th>
+                <th className="pb-1.5 pr-3">슈팅</th>
+                <th className="pb-1.5 pr-3">패스%</th>
+                <th className="pb-1.5">평점</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentMatches.map((m) => {
+                const date = new Date(m.matchDate);
+                const resultColor =
+                  m.result === "승"
+                    ? "text-green-400"
+                    : m.result === "패"
+                      ? "text-red-400"
+                      : "text-muted-foreground";
+                return (
+                  <tr
+                    key={m.matchId}
+                    className={`border-b border-border/15 cursor-pointer hover:bg-primary/5 transition-colors ${m.isOutlier ? "bg-yellow-500/5" : ""}`}
+                    onClick={() =>
+                      router.push(
+                        `/player/${encodeURIComponent(nickname)}/match/${m.matchId}`
+                      )
+                    }
+                  >
+                    <td className="py-1.5 pr-3 text-muted-foreground/60">
+                      {date.getMonth() + 1}/{date.getDate()}
+                    </td>
+                    <td className="py-1.5 pr-3 text-muted-foreground max-w-[90px] truncate">
+                      {m.opponentNickname}
+                    </td>
+                    <td className={`py-1.5 pr-3 font-bold ${resultColor}`}>
+                      {m.goalTotalDisplay}:{m.opponentGoalDisplay} {m.result}
+                    </td>
+                    <td className="py-1.5 pr-3 tabular-nums">{m.possession}%</td>
+                    <td className="py-1.5 pr-3 tabular-nums">
+                      {m.shootTotal}({m.effectiveShoot})
+                    </td>
+                    <td className="py-1.5 pr-3 tabular-nums">{m.passRate.toFixed(0)}%</td>
+                    <td className="py-1.5 tabular-nums">{m.avgRating.toFixed(1)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {recentMatches.some((m) => m.isOutlier) && (
+          <p className="mt-2 font-mono text-[10px] text-yellow-400/70">
+            ! 노란색 배경 = outlier (z-score {">"} 2.0)
+          </p>
+        )}
+      </Section>
 
       {/* Navigation links */}
       <div className="flex gap-3">
         <Link
           href={`/player/${encodeURIComponent(nickname)}/compare`}
-          className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+          className="rounded border border-dashed border-primary/20 px-4 py-2 font-mono text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
         >
-          🔄 랭커와 비교하기
+          $ compare --ranker
         </Link>
         <Link
           href={`/player/${encodeURIComponent(nickname)}/trend`}
-          className="rounded-lg border border-border px-4 py-2 text-sm hover:bg-muted transition-colors"
+          className="rounded border border-dashed border-primary/20 px-4 py-2 font-mono text-xs text-muted-foreground hover:border-primary/40 hover:text-primary transition-all"
         >
-          📈 변화 추적 보기
+          $ trend --weekly
         </Link>
       </div>
     </div>

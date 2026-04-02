@@ -1,11 +1,45 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
+const STEPS = [
+  { text: "connecting to nexon_api...", done: "[200 OK]" },
+  { text: "fetching match_records...", done: "loaded" },
+  { text: "computing statistics...", done: "done" },
+  { text: "evaluating action_rules(15)...", done: "done" },
+  { text: "classifying play_style...", done: "done" },
+  { text: "generating suggestions...", done: "done" },
+  { text: "building dashboard...", done: "" },
+];
+
 export default function Loading() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (step >= STEPS.length) return;
+    const delay = step === 0 ? 600 : 800 + Math.random() * 700;
+    const timer = setTimeout(() => setStep((s) => s + 1), delay);
+    return () => clearTimeout(timer);
+  }, [step]);
+
+  const progress = Math.min(100, Math.round((step / STEPS.length) * 100));
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
       <div className="flex flex-col items-center justify-center gap-6">
-        {/* Spinner */}
-        <div className="relative h-14 w-14">
-          <div className="absolute inset-0 rounded-full border-2 border-primary/20" />
-          <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-primary" />
+        {/* Spinner with progress */}
+        <div className="relative h-16 w-16">
+          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" className="text-primary/10" strokeWidth="3" />
+            <circle
+              cx="32" cy="32" r="28" fill="none" stroke="currentColor" className="text-primary transition-all duration-500"
+              strokeWidth="3" strokeLinecap="round"
+              strokeDasharray={`${progress * 1.76} 176`}
+            />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center font-mono text-xs text-primary">
+            {progress}%
+          </span>
         </div>
 
         {/* Status */}
@@ -13,28 +47,54 @@ export default function Loading() {
           <p className="font-mono text-sm text-foreground">
             <span className="text-primary">$</span> analyzing player data...
           </p>
-          <p className="font-mono text-xs text-muted-foreground animate-pulse">
-            매치 기록 수집 & 통계 분석 중
+          <p className="font-mono text-xs text-muted-foreground">
+            {step < STEPS.length ? STEPS[step].text : "거의 완료..."}
           </p>
         </div>
 
         {/* Terminal log */}
-        <div className="mt-4 w-full max-w-sm rounded-lg border border-border/30 bg-card/50 p-4 font-mono text-[11px] text-muted-foreground">
-          <div className="space-y-1.5">
-            <p>
-              <span className="text-primary">{">"}</span> connecting to api...
-              <span className="ml-1 text-green-400">ok</span>
-            </p>
-            <p>
-              <span className="text-primary">{">"}</span> loading match records...
-              <span className="ml-1 animate-pulse">_</span>
-            </p>
-            <p className="animate-pulse text-muted-foreground/50">
-              <span className="text-primary/50">{">"}</span> computing statistics...
-            </p>
-            <p className="animate-pulse text-muted-foreground/30">
-              <span className="text-primary/30">{">"}</span> generating suggestions...
-            </p>
+        <div className="mt-2 w-full max-w-md rounded-lg border border-primary/15 bg-background/80 overflow-hidden">
+          {/* Title bar */}
+          <div className="flex items-center gap-1.5 border-b border-primary/10 px-4 py-2">
+            <div className="h-2 w-2 rounded-full bg-red-500/50" />
+            <div className="h-2 w-2 rounded-full bg-yellow-500/50" />
+            <div className="h-2 w-2 rounded-full bg-green-500/50" />
+            <span className="ml-2 font-mono text-[9px] text-muted-foreground/40">fclab — analysis</span>
+          </div>
+          <div className="space-y-1 p-4 font-mono text-[11px]">
+            {STEPS.map((s, i) => {
+              if (i > step) return null;
+              const isDone = i < step;
+              const isCurrent = i === step;
+              return (
+                <div key={i} className={`flex items-center gap-2 transition-opacity duration-300 ${i > step ? "opacity-0" : "opacity-100"}`}>
+                  {isDone ? (
+                    <span className="text-primary">✓</span>
+                  ) : (
+                    <span className="text-primary/40">{">"}</span>
+                  )}
+                  <span className={isDone ? "text-muted-foreground/60" : "text-muted-foreground"}>
+                    {s.text}
+                  </span>
+                  {isDone && s.done && (
+                    <span className="text-primary text-[10px]">{s.done}</span>
+                  )}
+                  {isCurrent && (
+                    <span className="inline-block h-3 w-1 bg-primary animate-cursor ml-0.5" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full max-w-md">
+          <div className="h-0.5 w-full rounded-full bg-primary/10">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(0,214,143,0.3)]"
+              style={{ width: `${progress}%` }}
+            />
           </div>
         </div>
       </div>

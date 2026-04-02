@@ -175,10 +175,10 @@ export interface MatchTypeCount {
 const MAIN_MATCH_TYPES = [
   { matchtype: 50, desc: "공식" },
   { matchtype: 52, desc: "감독" },
-  { matchtype: 30, desc: "공식친선" },
-  { matchtype: 40, desc: "친선" },
+  { matchtype: 60, desc: "공식친선" },
+  { matchtype: 40, desc: "클래식1on1" },
   { matchtype: 204, desc: "볼타" },
-  { matchtype: 214, desc: "커스텀" },
+  { matchtype: 214, desc: "볼타공식" },
 ];
 
 export async function getMatchTypeCounts(
@@ -192,12 +192,14 @@ export async function getMatchTypeCounts(
       const ids = await client.getUserMatch({
         ouid,
         matchtype: mt.matchtype,
-        limit: 100,
+        limit: 1,
       });
       results.push({ ...mt, count: ids.length });
     } catch {
       results.push({ ...mt, count: 0 });
     }
+    // Rate limit delay
+    await new Promise((r) => setTimeout(r, 250));
   }
 
   return results.sort((a, b) => b.count - a.count);
@@ -210,12 +212,13 @@ export async function getMatchTypeCounts(
 export async function analyzePlayer(
   nickname: string,
   matchtype: number = 50,
-  limit: number = 20
+  limit: number = 20,
+  existingOuid?: string
 ): Promise<AnalysisResult> {
   const client = createNexonClient();
 
-  // 1. Get user info
-  const { ouid } = await client.getOuid({ nickname });
+  // 1. Get user info (reuse ouid if provided)
+  const ouid = existingOuid ?? (await client.getOuid({ nickname })).ouid;
   const [user, maxDivisions] = await Promise.all([
     client.getUserBasic({ ouid }),
     client.getUserMaxDivision({ ouid }),

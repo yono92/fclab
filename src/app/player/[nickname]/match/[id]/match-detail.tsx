@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShootingHeatmap } from "@/components/charts/ShootingHeatmap";
 import { GoalTimeline } from "@/components/charts/GoalTimeline";
 import type { MatchResponse, MatchInfo } from "@/types/nexon";
+
+const MATCH_TYPE_NAME: Record<number, string> = {
+  50: "공식경기", 52: "감독모드", 60: "공식친선", 40: "클래식1on1", 204: "볼타친선", 214: "볼타공식",
+};
 
 const POSITION_MAP: Record<number, string> = {
   0: "GK", 1: "SW", 2: "RWB", 3: "RB", 4: "RCB", 5: "CB", 6: "LCB", 7: "LB", 8: "LWB",
@@ -95,139 +98,133 @@ export function MatchDetailView({ match, me, opponent, nickname, playerNameMap =
       <div className="flex items-center gap-4">
         <Link
           href={`/player/${encodeURIComponent(nickname)}`}
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="font-mono text-xs text-muted-foreground hover:text-primary transition-colors"
         >
-          ← 돌아가기
+          {"<"}- back
         </Link>
-        <span className="text-sm text-muted-foreground">{dateStr} · 매치타입 {match.matchType}</span>
+        <span className="font-mono text-[10px] text-muted-foreground/50">|</span>
+        <span className="font-mono text-[10px] text-muted-foreground/60">{dateStr}</span>
+        <span className="rounded border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[9px] text-primary/70">
+          {MATCH_TYPE_NAME[match.matchType] ?? `type:${match.matchType}`}
+        </span>
       </div>
 
       {/* Score */}
-      <Card>
-        <CardContent className="flex items-center justify-center gap-8 py-8">
-          <div className="text-center">
-            <p className="text-sm text-blue-400">나</p>
-            <p className="text-lg font-bold">{me.nickname}</p>
-            <p className={`text-sm ${resultColor}`}>{me.matchDetail.matchResult}</p>
+      <div className="relative rounded-lg border border-dashed border-primary/20 py-6 px-4">
+        <span className="absolute -top-1 -left-1 font-mono text-[8px] text-primary/40">+</span>
+        <span className="absolute -top-1 -right-1 font-mono text-[8px] text-primary/40">+</span>
+        <span className="absolute -bottom-1 -left-1 font-mono text-[8px] text-primary/40">+</span>
+        <span className="absolute -bottom-1 -right-1 font-mono text-[8px] text-primary/40">+</span>
+        <p className="font-mono text-[9px] text-primary/40 mb-4">MATCH.result</p>
+        <div className="flex items-center justify-center gap-6">
+          {/* Me */}
+          <div className="flex-1 text-right">
+            <p className="font-mono text-[10px] text-blue-400/60 mb-1">ME</p>
+            <p className="font-mono text-base font-bold truncate">{me.nickname}</p>
           </div>
-          <div className="text-center">
-            <p className="text-4xl font-bold">
-              {me.shoot.goalTotalDisplay} : {op?.shoot.goalTotalDisplay ?? 0}
-            </p>
+          {/* Score */}
+          <div className="flex items-baseline gap-3">
+            <span className="font-mono text-5xl font-black text-primary">{me.shoot.goalTotalDisplay}</span>
+            <span className="font-mono text-lg text-muted-foreground/30">:</span>
+            <span className="font-mono text-5xl font-black text-red-400/80">{op?.shoot.goalTotalDisplay ?? 0}</span>
           </div>
-          <div className="text-center">
-            <p className="text-sm text-red-400">상대</p>
-            <p className="text-lg font-bold">{op?.nickname ?? "?"}</p>
-            <p className={`text-sm ${
-              op?.matchDetail.matchResult === "승" ? "text-green-400" :
-              op?.matchDetail.matchResult === "패" ? "text-red-400" : "text-muted-foreground"
-            }`}>{op?.matchDetail.matchResult ?? ""}</p>
+          {/* Opponent */}
+          <div className="flex-1 text-left">
+            <p className="font-mono text-[10px] text-red-400/60 mb-1">OPP</p>
+            <p className="font-mono text-base font-bold truncate">{op?.nickname ?? "?"}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        {/* Result label */}
+        <p className={`mt-3 text-center font-mono text-sm font-bold ${resultColor}`}>
+          {me.matchDetail.matchResult}
+        </p>
+      </div>
 
       {/* Comparison */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">경기 요약</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="rounded-lg border border-border/30 bg-card/30 p-4">
+        <p className="font-mono text-[9px] text-primary/40 mb-3">COMPARE.stats</p>
+        <div className="space-y-3">
           {comparisons.map((c) => (
             <ComparisonBar key={c.label} {...c} />
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Heatmaps */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-blue-400">나의 슈팅</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-lg border border-border/30 bg-card/30 p-4">
+          <p className="font-mono text-[9px] text-blue-400/60 mb-2">SHOOT.heatmap(me)</p>
+          <ShootingHeatmap
+            shots={me.shootDetail.map((s) => ({
+              x: s.x, y: s.y, result: s.result, goalTime: s.goalTime, spId: s.spId, inPenalty: s.inPenalty,
+            }))}
+            width={380}
+            height={246}
+          />
+        </div>
+        {op && (
+          <div className="rounded-lg border border-border/30 bg-card/30 p-4">
+            <p className="font-mono text-[9px] text-red-400/60 mb-2">SHOOT.heatmap(opp)</p>
             <ShootingHeatmap
-              shots={me.shootDetail.map((s) => ({
+              shots={op.shootDetail.map((s) => ({
                 x: s.x, y: s.y, result: s.result, goalTime: s.goalTime, spId: s.spId, inPenalty: s.inPenalty,
               }))}
               width={380}
               height={246}
             />
-          </CardContent>
-        </Card>
-        {op && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-red-400">상대 슈팅</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ShootingHeatmap
-                shots={op.shootDetail.map((s) => ({
-                  x: s.x, y: s.y, result: s.result, goalTime: s.goalTime, spId: s.spId, inPenalty: s.inPenalty,
-                }))}
-                width={380}
-                height={246}
-              />
-            </CardContent>
-          </Card>
+          </div>
         )}
       </div>
 
       {/* Goal Timeline */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">골 타임라인</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <GoalTimeline myGoals={myGoals} opGoals={opGoals} />
-        </CardContent>
-      </Card>
+      <div className="rounded-lg border border-border/30 bg-card/30 p-4">
+        <p className="font-mono text-[9px] text-primary/40 mb-2">GOAL.timeline</p>
+        <GoalTimeline myGoals={myGoals} opGoals={opGoals} />
+      </div>
 
       {/* Player Performance */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">선수별 퍼포먼스</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-left text-muted-foreground">
-                  <th className="pb-2 pr-3">선수</th>
-                  <th className="pb-2 pr-3">포지션</th>
-                  <th className="pb-2 pr-3">골</th>
-                  <th className="pb-2 pr-3">어시</th>
-                  <th className="pb-2 pr-3">패스%</th>
-                  <th className="pb-2">평점</th>
-                </tr>
-              </thead>
-              <tbody>
-                {me.player
-                  .sort((a, b) => b.status.spRating - a.status.spRating)
-                  .map((p) => (
-                    <tr key={p.spId} className="border-b border-border/50">
-                      <td className="py-2 pr-3">
-                        <span className="text-sm">{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
-                      </td>
-                      <td className="py-2 pr-3">
-                        <span className="rounded bg-muted/50 px-1.5 py-0.5 font-mono text-[10px]">
-                          {POSITION_MAP[p.spPosition] ?? `P${p.spPosition}`}
-                        </span>
-                      </td>
-                      <td className="py-2 pr-3">{p.status.goal}</td>
-                      <td className="py-2 pr-3">{p.status.assist}</td>
-                      <td className="py-2 pr-3">
-                        {p.status.passTry > 0
-                          ? Math.round((p.status.passSuccess / p.status.passTry) * 100)
-                          : 0}%
-                      </td>
-                      <td className="py-2">{p.status.spRating.toFixed(1)}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+      <div className="rounded-lg border border-border/30 bg-card/30 p-4">
+        <p className="font-mono text-[9px] text-primary/40 mb-3">PLAYER.performance</p>
+        <div className="space-y-1">
+          {/* Header */}
+          <div className="grid grid-cols-[1fr_50px_36px_36px_48px_44px] gap-1 font-mono text-[9px] text-muted-foreground/50 border-b border-border/30 pb-1.5">
+            <span>선수</span>
+            <span>포지션</span>
+            <span className="text-center">골</span>
+            <span className="text-center">어시</span>
+            <span className="text-right">패스%</span>
+            <span className="text-right">평점</span>
           </div>
-        </CardContent>
-      </Card>
+          {/* Starters (rating > 0) */}
+          {me.player
+            .filter((p) => p.status.spRating > 0)
+            .sort((a, b) => b.status.spRating - a.status.spRating)
+            .map((p) => {
+              const passRate = p.status.passTry > 0
+                ? Math.round((p.status.passSuccess / p.status.passTry) * 100)
+                : 0;
+              const ratingColor = p.status.spRating >= 7.0 ? "text-primary" : p.status.spRating >= 5.0 ? "text-foreground" : "text-red-400";
+              return (
+                <div key={p.spId} className="grid grid-cols-[1fr_50px_36px_36px_48px_44px] gap-1 items-center py-1 border-b border-border/20 text-sm">
+                  <span className="truncate">{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
+                  <span className="rounded bg-primary/5 border border-primary/15 px-1 py-0.5 font-mono text-[9px] text-primary/60 text-center w-fit">
+                    {POSITION_MAP[p.spPosition] ?? `P${p.spPosition}`}
+                  </span>
+                  <span className="text-center font-mono text-xs">{p.status.goal || "-"}</span>
+                  <span className="text-center font-mono text-xs">{p.status.assist || "-"}</span>
+                  <span className="text-right font-mono text-xs text-muted-foreground">{passRate}%</span>
+                  <span className={`text-right font-mono text-xs font-bold ${ratingColor}`}>{p.status.spRating.toFixed(1)}</span>
+                </div>
+              );
+            })}
+          {/* Subs (rating = 0) - collapsed */}
+          {me.player.some((p) => p.status.spRating === 0) && (
+            <p className="pt-1.5 font-mono text-[9px] text-muted-foreground/30">
+              + {me.player.filter((p) => p.status.spRating === 0).length}명 벤치 (미출전)
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

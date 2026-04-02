@@ -41,7 +41,7 @@ export default async function PlayerDashboardPage({
     const bestType = matchTypeCounts.find((mt) => mt.count > 0)?.matchtype;
     const matchtype = requestedType ?? bestType ?? 50;
 
-    const result = await analyzePlayer(decodedNick, matchtype, limit);
+    const result = await analyzePlayer(decodedNick, matchtype, limit, ouid);
 
     // DB에 비동기 저장 (실패해도 대시보드는 정상 표시)
     persistAnalysis(result.user, result.matches, result.myStats).catch(() => {});

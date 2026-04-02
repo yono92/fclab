@@ -15,12 +15,10 @@ interface MatchTypeChipsProps {
 const icons: Record<number, string> = {
   50: "🏆",
   52: "📋",
-  30: "⚽",
+  60: "⚽",
   40: "⚽",
   204: "🎮",
   214: "🎮",
-  215: "🎮",
-  216: "🎮",
 };
 
 export function MatchTypeChips({
@@ -50,7 +48,6 @@ export function MatchTypeChips({
           >
             <span>{icon}</span>
             <span>{mt.desc}</span>
-            <span className="tabular-nums opacity-60">{mt.count}</span>
           </button>
         );
       })}
