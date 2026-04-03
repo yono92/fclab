@@ -1,8 +1,57 @@
-export default function MetaPage() {
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-bold">메타 대시보드</h1>
-      <p className="mt-2 text-muted-foreground">준비 중</p>
-    </div>
-  );
+import type { Metadata } from "next";
+import { fetchRankerMeta, fetchGeneralMeta, groupByPosition } from "@/lib/meta-queries";
+import { resolvePlayerNames } from "@/lib/resolve-meta";
+import { MetaDashboard } from "./meta-dashboard";
+
+export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "메타 대시보드 — FCLab",
+  description: "FC Online 랭커 메타와 일반 유저 메타를 분리해서 보여주는 대시보드",
+};
+
+interface PageProps {
+  searchParams: Promise<{ matchtype?: string }>;
+}
+
+export default async function MetaPage({ searchParams }: PageProps) {
+  const sp = await searchParams;
+  const matchtype = Number(sp.matchtype) || 50;
+
+  try {
+    const [rankerRows, generalRows] = await Promise.all([
+      fetchRankerMeta(matchtype),
+      fetchGeneralMeta(matchtype),
+    ]);
+
+    const allSpIds = [
+      ...rankerRows.map((r) => r.sp_id),
+      ...generalRows.map((r) => r.sp_id),
+    ];
+    const nameMap = await resolvePlayerNames([...new Set(allSpIds)]);
+    const playerNameMap = Object.fromEntries(nameMap);
+
+    const rankerByPosition = Object.fromEntries(groupByPosition(rankerRows));
+    const generalByPosition = Object.fromEntries(groupByPosition(generalRows));
+
+    return (
+      <MetaDashboard
+        matchtype={matchtype}
+        rankerByPosition={rankerByPosition}
+        generalByPosition={generalByPosition}
+        playerNameMap={playerNameMap}
+      />
+    );
+  } catch {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <h1 className="font-mono text-lg text-destructive">
+          &gt; ERROR: 메타 데이터를 불러올 수 없습니다
+        </h1>
+        <p className="mt-2 font-mono text-sm text-muted-foreground">
+          잠시 후 다시 시도해주세요.
+        </p>
+      </div>
+    );
+  }
 }
