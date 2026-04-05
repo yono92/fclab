@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/sync-meta",
       "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/cron/sync-ranker",
+      "schedule": "0 20 * * *"
     }
   ]
 }
