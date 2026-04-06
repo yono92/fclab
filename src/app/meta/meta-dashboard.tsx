@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getPositionName } from "@/lib/resolve-meta";
 import type { RankerMetaRow, GeneralMetaRow } from "@/lib/meta-queries";
+import { PlayerImage } from "@/components/player-image";
 
 const MATCH_TYPES = [
   { matchtype: 50, desc: "공식경기", icon: "🏆" },
@@ -217,6 +218,7 @@ function RankerPositionCard({
             >
               {i + 1}
             </span>
+            <PlayerImage spId={player.sp_id} size="sm" />
             <span className="min-w-0 flex-1 truncate text-foreground">
               {player.player_name}
             </span>
@@ -327,6 +329,7 @@ function GeneralPositionCard({
               <span className="w-4 shrink-0 text-right text-muted-foreground">
                 {i + 1}
               </span>
+              <PlayerImage spId={player.sp_id} size="sm" />
               <div className="relative min-w-0 flex-1">
                 <div
                   className="absolute inset-y-0 left-0 rounded-sm bg-primary/10"

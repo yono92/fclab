@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlayerImage } from "@/components/player-image";
 import {
   RadarChart,
   Radar,
@@ -42,11 +43,14 @@ function PlayerCard({ player }: { player: PlayerComparison }) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">
-          spId: {player.spId}{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            ({player.appearances}경기 출전)
-          </span>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <PlayerImage spId={player.spId} size="lg" />
+          <div>
+            <div>spId: {player.spId}</div>
+            <span className="text-sm font-normal text-muted-foreground">
+              {player.appearances}경기 출전
+            </span>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>

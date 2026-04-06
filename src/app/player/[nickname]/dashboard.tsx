@@ -1,11 +1,13 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TrustBadge } from "@/components/analysis/TrustBadge";
 import { PercentileGauge } from "@/components/analysis/PercentileGauge";
 import { StatCard } from "@/components/analysis/StatCard";
 import { ActionSuggestionCard } from "@/components/analysis/ActionSuggestionCard";
+import { TerminalLoading } from "@/components/ui/terminal-loading";
 import { ShootingHeatmap } from "@/components/charts/ShootingHeatmap";
 import { PlayStyleRadar } from "@/components/charts/PlayStyleRadar";
 import { WinRateDonut } from "@/components/charts/WinRateDonut";
@@ -14,6 +16,7 @@ import { ConcededTimeHistogram } from "@/components/charts/ConcededTimeHistogram
 import type { AnalysisResult, MatchTypeCount } from "@/lib/analyze";
 import { MatchTypeChips } from "@/components/analysis/MatchTypeChips";
 import Link from "next/link";
+import { PlayerImage } from "@/components/player-image";
 
 interface DashboardProps {
   result: AnalysisResult;
@@ -43,6 +46,7 @@ function Section({ label, children, className = "" }: { label: string; children:
 
 export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts, playerNameMap = {} }: DashboardProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const {
     user,
     maxDivisions,
@@ -79,11 +83,28 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts,
   function changeParam(key: string, value: string) {
     const url = new URL(window.location.href);
     url.searchParams.set(key, value);
-    router.push(url.pathname + url.search);
+    startTransition(() => {
+      router.push(url.pathname + url.search);
+    });
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 relative">
+      {/* Loading overlay */}
+      {isPending && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-[2px] rounded-lg">
+          <TerminalLoading
+            title="reloading data..."
+            variant="overlay"
+            loop
+            steps={[
+              { text: "updating params...", done: "done" },
+              { text: "fetching match_records...", done: "loaded" },
+              { text: "recomputing stats...", done: "done" },
+            ]}
+          />
+        </div>
+      )}
       {/* A: Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-baseline gap-3">
@@ -320,7 +341,7 @@ export function Dashboard({ result, nickname, matchtype, limit, matchTypeCounts,
                 return (
                   <div key={p.spId} className="grid grid-cols-[24px_1fr_48px_56px_56px_44px] gap-1 items-center py-1.5 border-b border-border/15 text-sm">
                     <span className="font-mono text-[10px] text-muted-foreground/40">{i + 1}</span>
-                    <span className="truncate">{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
+                    <span className="flex items-center gap-1.5 truncate"><PlayerImage spId={p.spId} size="sm" />{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
                     <span className="text-center font-mono text-xs">{p.appearances}</span>
                     <span className="text-right font-mono text-xs">{p.avgGoal.toFixed(2)}</span>
                     <span className="text-right font-mono text-xs">{p.avgAssist.toFixed(2)}</span>

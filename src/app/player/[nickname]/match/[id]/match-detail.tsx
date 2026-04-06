@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShootingHeatmap } from "@/components/charts/ShootingHeatmap";
 import { GoalTimeline } from "@/components/charts/GoalTimeline";
 import type { MatchResponse, MatchInfo } from "@/types/nexon";
+import { PlayerImage } from "@/components/player-image";
 
 const MATCH_TYPE_NAME: Record<number, string> = {
   50: "공식경기", 52: "감독모드", 60: "공식친선", 40: "클래식1on1", 204: "볼타친선", 214: "볼타공식",
@@ -206,7 +207,7 @@ export function MatchDetailView({ match, me, opponent, nickname, playerNameMap =
               const ratingColor = p.status.spRating >= 7.0 ? "text-primary" : p.status.spRating >= 5.0 ? "text-foreground" : "text-red-400";
               return (
                 <div key={p.spId} className="grid grid-cols-[1fr_50px_36px_36px_48px_44px] gap-1 items-center py-1 border-b border-border/20 text-sm">
-                  <span className="truncate">{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
+                  <span className="flex items-center gap-1.5 truncate"><PlayerImage spId={p.spId} size="sm" />{playerNameMap[String(p.spId)] ?? "Unknown"}</span>
                   <span className="rounded bg-primary/5 border border-primary/15 px-1 py-0.5 font-mono text-[9px] text-primary/60 text-center w-fit">
                     {POSITION_MAP[p.spPosition] ?? `P${p.spPosition}`}
                   </span>
