@@ -10,8 +10,6 @@ import { PlayerImage } from "@/components/player-image";
 const MATCH_TYPES = [
   { matchtype: 50, desc: "공식경기", icon: "🏆" },
   { matchtype: 52, desc: "감독모드", icon: "📋" },
-  { matchtype: 60, desc: "친선", icon: "⚽" },
-  { matchtype: 204, desc: "볼타", icon: "🎮" },
 ];
 
 const POSITION_GROUPS = [

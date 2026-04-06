@@ -11,10 +11,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    const result = await syncRankerStats(50);
-    const success = result.errors === 0;
+    const results = [
+      await syncRankerStats(50),
+      await syncRankerStats(52),
+    ];
+    const success = results.every((r) => r.errors === 0);
     return Response.json(
-      { result, success },
+      { results, success },
       { status: success ? 200 : 207 },
     );
   } catch (err) {
