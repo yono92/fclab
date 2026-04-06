@@ -50,6 +50,12 @@ interface MetaDashboardProps {
   rankerByPosition: Record<number, RankerMetaRow[]>;
   generalByPosition: Record<number, GeneralMetaRow[]>;
   playerNameMap: Record<number, string>;
+  seasonMap: Record<number, string>;
+}
+
+function getSeasonLabel(spId: number, seasonMap: Record<number, string>): string {
+  const seasonId = Math.floor(spId / 1_000_000);
+  return seasonMap[seasonId] ?? `S${seasonId}`;
 }
 
 export function MetaDashboard({
@@ -57,6 +63,7 @@ export function MetaDashboard({
   rankerByPosition,
   generalByPosition,
   playerNameMap,
+  seasonMap,
 }: MetaDashboardProps) {
   const router = useRouter();
   const [dataTab, setDataTab] = useState("ranker");
@@ -109,6 +116,7 @@ export function MetaDashboard({
               posTab={posTab}
               setPosTab={setPosTab}
               rankerByPosition={rankerByPosition}
+              seasonMap={seasonMap}
             />
           ) : (
             <EmptyState />
@@ -146,10 +154,12 @@ function PositionTabView({
   posTab,
   setPosTab,
   rankerByPosition,
+  seasonMap,
 }: {
   posTab: string;
   setPosTab: (v: string) => void;
   rankerByPosition: Record<number, RankerMetaRow[]>;
+  seasonMap: Record<number, string>;
 }) {
   const group = POSITION_GROUPS.find((g) => g.key === posTab) ?? POSITION_GROUPS[0];
   const statDefs = POSITION_STATS[group.key] ?? POSITION_STATS.MID;
@@ -186,6 +196,7 @@ function PositionTabView({
               position={pos}
               players={players}
               statDefs={statDefs}
+              seasonMap={seasonMap}
             />
           );
         })}
@@ -203,10 +214,12 @@ function RankerPositionSection({
   position,
   players,
   statDefs,
+  seasonMap,
 }: {
   position: number;
   players: RankerMetaRow[];
   statDefs: { key: keyof RankerMetaRow; label: string }[];
+  seasonMap: Record<number, string>;
 }) {
   const top5 = players.slice(0, 5);
   const best = top5[0];
@@ -233,6 +246,9 @@ function RankerPositionSection({
                 <span className="font-mono text-xs font-bold text-primary">1st</span>
                 <span className="truncate text-sm font-semibold text-foreground">
                   {best.player_name}
+                </span>
+                <span className="rounded bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                  {getSeasonLabel(best.sp_id, seasonMap)}
                 </span>
               </div>
               <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
@@ -274,6 +290,9 @@ function RankerPositionSection({
               <PlayerImage spId={player.sp_id} size="md" />
               <span className="min-w-0 flex-1 truncate text-foreground">
                 {player.player_name}
+                <span className="ml-1 rounded bg-muted/40 px-1 py-px font-mono text-[9px] text-muted-foreground/70">
+                  {getSeasonLabel(player.sp_id, seasonMap)}
+                </span>
               </span>
               {statDefs.map((s) => {
                 const val = player[s.key] as number;

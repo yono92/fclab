@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fetchRankerMeta, fetchGeneralMeta, groupByPosition } from "@/lib/meta-queries";
 import { resolvePlayerNames } from "@/lib/resolve-meta";
+import { createSupabaseClient } from "@/lib/supabase";
 import { MetaDashboard } from "./meta-dashboard";
 
 export const revalidate = 3600;
@@ -29,6 +30,21 @@ export default async function MetaPage({ searchParams }: PageProps) {
     const nameMap = await resolvePlayerNames([...new Set(generalSpIds)]);
     const playerNameMap = Object.fromEntries(nameMap);
 
+    // 시즌명 매핑
+    const allSpIds = [...rankerRows.map((r) => r.sp_id), ...generalSpIds];
+    const seasonIds = [...new Set(allSpIds.map((id) => Math.floor(id / 1_000_000)))];
+    const supabase = createSupabaseClient();
+    const { data: seasons } = await supabase
+      .from("meta_seasons")
+      .select("season_id, class_name")
+      .in("season_id", seasonIds);
+    const seasonMap: Record<number, string> = {};
+    for (const s of seasons ?? []) {
+      // "25 LIVE (25 LIVE)" → "25 LIVE"
+      const short = s.class_name.split("(")[0].trim();
+      seasonMap[s.season_id] = short;
+    }
+
     const rankerByPosition = Object.fromEntries(groupByPosition(rankerRows));
     const generalByPosition = Object.fromEntries(groupByPosition(generalRows));
 
@@ -38,6 +54,7 @@ export default async function MetaPage({ searchParams }: PageProps) {
         rankerByPosition={rankerByPosition}
         generalByPosition={generalByPosition}
         playerNameMap={playerNameMap}
+        seasonMap={seasonMap}
       />
     );
   } catch {
