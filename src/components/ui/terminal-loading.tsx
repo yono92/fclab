@@ -10,26 +10,34 @@ interface Step {
 interface TerminalLoadingProps {
   title: string;
   steps: Step[];
+  variant?: "page" | "overlay";
+  loop?: boolean;
 }
 
-export function TerminalLoading({ title, steps }: TerminalLoadingProps) {
+export function TerminalLoading({ title, steps, variant = "page", loop = false }: TerminalLoadingProps) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (step >= steps.length) return;
+    if (step >= steps.length) {
+      if (loop) {
+        const timer = setTimeout(() => setStep(0), 400);
+        return () => clearTimeout(timer);
+      }
+      return;
+    }
     const delay = step === 0 ? 600 : 800 + Math.random() * 700;
     const timer = setTimeout(() => setStep((s) => s + 1), delay);
     return () => clearTimeout(timer);
-  }, [step, steps.length]);
+  }, [step, steps.length, loop]);
 
   const progress = Math.min(100, Math.round((step / steps.length) * 100));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
-      <div className="flex flex-col items-center justify-center gap-6">
+    <div className={variant === "page" ? "mx-auto max-w-6xl px-4 py-16" : ""}>
+      <div className={`flex flex-col items-center justify-center ${variant === "page" ? "gap-6" : "gap-4"}`}>
         {/* Spinner with progress */}
-        <div className="relative h-16 w-16">
-          <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64">
+        <div className={`relative ${variant === "page" ? "h-16 w-16" : "h-10 w-10"}`}>
+          <svg className={`${variant === "page" ? "h-16 w-16" : "h-10 w-10"} -rotate-90`} viewBox="0 0 64 64">
             <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" className="text-primary/10" strokeWidth="3" />
             <circle
               cx="32" cy="32" r="28" fill="none" stroke="currentColor" className="text-primary transition-all duration-500"
@@ -53,7 +61,7 @@ export function TerminalLoading({ title, steps }: TerminalLoadingProps) {
         </div>
 
         {/* Terminal log */}
-        <div className="mt-2 w-full max-w-md rounded-lg border border-primary/15 bg-background/80 overflow-hidden">
+        <div className={`mt-2 w-full ${variant === "page" ? "max-w-md" : "max-w-xs"} rounded-lg border border-primary/15 bg-background/80 overflow-hidden`}>
           <div className="flex items-center gap-1.5 border-b border-primary/10 px-4 py-2">
             <div className="h-2 w-2 rounded-full bg-red-500/50" />
             <div className="h-2 w-2 rounded-full bg-yellow-500/50" />
@@ -88,7 +96,7 @@ export function TerminalLoading({ title, steps }: TerminalLoadingProps) {
         </div>
 
         {/* Progress bar */}
-        <div className="w-full max-w-md">
+        <div className={`w-full ${variant === "page" ? "max-w-md" : "max-w-xs"} ${variant === "overlay" ? "hidden" : ""}`}>
           <div className="h-0.5 w-full rounded-full bg-primary/10">
             <div
               className="h-full rounded-full bg-primary transition-all duration-500 shadow-[0_0_8px_rgba(0,214,143,0.3)]"
