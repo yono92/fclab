@@ -33,14 +33,16 @@ export default async function ComparePage({ params, searchParams }: PageProps) {
     // For each top player, get ranker stats
     for (const player of result.playerStats.slice(0, 10)) {
       try {
+        // 주요 포지션에서 랭커 데이터 조회
+        const positions = [25, 24, 26, 21, 18, 14, 10, 5, 3, 7, 0]; // ST,RS,LS,CF,CAM,CM,CDM,CB,RB,LB,GK
         const rankerData = await client.getRankerStats({
           matchtype,
-          players: player.spId,
+          players: positions.map((po) => ({ id: player.spId, po })),
         });
 
-        if (rankerData.length === 0 || rankerData[0].players.length === 0) continue;
+        if (rankerData.length === 0) continue;
 
-        const ranker = rankerData[0].players[0].status;
+        const ranker = rankerData[0].status;
 
         // Collect per-match stats for this player from my matches
         const myPerMatch = result.myStats

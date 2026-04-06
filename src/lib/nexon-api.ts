@@ -151,10 +151,11 @@ export class NexonApiClient {
   }
 
   async getRankerStats(params: GetRankerStatsParams): Promise<RankerStats> {
+    const playersJson = JSON.stringify(params.players);
     return this.fetchWithRetry(
       this.url("/fconline/v1/ranker-stats", {
         matchtype: params.matchtype,
-        players: params.players,
+        players: playersJson,
       }),
       RankerStatsSchema
     );

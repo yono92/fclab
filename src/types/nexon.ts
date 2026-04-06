@@ -227,35 +227,28 @@ export const RankerPlayerStatusSchema = z.object({
   assist: z.number(),
   goal: z.number(),
   dribble: z.number(),
-  intercept: z.number(),
-  defending: z.number(),
   passTry: z.number(),
   passSuccess: z.number(),
   dribbleTry: z.number(),
   dribbleSuccess: z.number(),
-  ballPossesionTry: z.number(),
-  ballPossesionSuccess: z.number(),
-  aerialTry: z.number(),
-  aerialSuccess: z.number(),
-  blockTry: z.number(),
   block: z.number(),
-  tackleTry: z.number(),
   tackle: z.number(),
-  spRating: z.number(),
-});
+  matchCount: z.number(),
+}).passthrough();
 export type RankerPlayerStatus = z.infer<typeof RankerPlayerStatusSchema>;
 
-export const RankerPlayerSchema = z.object({
-  spId: z.number(),
+/**
+ * GET /fconline/v1/ranker-stats?matchtype={}&players={url-encoded json array}
+ *
+ * players 파라미터: [{"id": spId, "po": position}] 을 URL 인코딩한 값
+ * 예) [{"id":100167680,"po":18}] → %5B%7B%22id%22%3A100167680%2C%22po%22%3A18%7D%5D
+ *
+ * 응답: 플랫한 배열 (래핑 없음)
+ */
+export const RankerStatsItemSchema = z.object({
+  spid: z.number(),
   spPosition: z.number(),
   status: RankerPlayerStatusSchema,
-});
-export type RankerPlayer = z.infer<typeof RankerPlayerSchema>;
-
-/** GET /fconline/v1/ranker-stats?matchtype={}&players={spid} */
-export const RankerStatsItemSchema = z.object({
-  matchType: z.number(),
-  players: z.array(RankerPlayerSchema),
   createDate: z.string(),
 });
 export const RankerStatsSchema = z.array(RankerStatsItemSchema);
@@ -365,7 +358,12 @@ export interface GetMatchDetailParams {
   matchid: string;
 }
 
+export interface RankerPlayerQuery {
+  id: number;   // spId
+  po: number;   // spPosition
+}
+
 export interface GetRankerStatsParams {
   matchtype: number;
-  players: number;
+  players: RankerPlayerQuery[];
 }
