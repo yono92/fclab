@@ -14,34 +14,34 @@ const MATCH_TYPES = [
   { matchtype: 204, desc: "볼타", icon: "🎮" },
 ];
 
-// 포지션 그룹 및 표시 순서
-const POSITION_GROUPS: { label: string; positions: number[] }[] = [
-  { label: "FWD", positions: [25, 24, 26, 21, 20, 22, 23, 27] },
-  { label: "MID", positions: [18, 17, 19, 14, 13, 15, 12, 16, 10, 9, 11] },
-  { label: "DEF", positions: [5, 4, 6, 3, 7, 2, 8, 1] },
-  { label: "GK", positions: [0] },
+const POSITION_GROUPS = [
+  { key: "FWD", label: "공격", positions: [25, 24, 26, 21, 20, 22, 23, 27] },
+  { key: "MID", label: "미드필더", positions: [18, 17, 19, 14, 13, 15, 12, 16, 10, 9, 11] },
+  { key: "DEF", label: "수비", positions: [5, 4, 6, 3, 7, 2, 8, 1] },
+  { key: "GK", label: "골키퍼", positions: [0] },
 ];
 
-// 포지션별 표시할 주요 스탯
 const POSITION_STATS: Record<string, { key: keyof RankerMetaRow; label: string }[]> = {
   FWD: [
     { key: "goal", label: "골" },
-    { key: "assist", label: "어시" },
-    { key: "effective_shoot", label: "유효슛" },
+    { key: "assist", label: "어시스트" },
+    { key: "effective_shoot", label: "유효슈팅" },
+    { key: "shoot", label: "슈팅" },
   ],
   MID: [
-    { key: "assist", label: "어시" },
-    { key: "pass_success", label: "패스" },
+    { key: "assist", label: "어시스트" },
+    { key: "pass_success", label: "패스 성공" },
     { key: "goal", label: "골" },
+    { key: "dribble_success", label: "드리블 성공" },
   ],
   DEF: [
     { key: "tackle", label: "태클" },
     { key: "block", label: "블록" },
-    { key: "pass_success", label: "패스" },
+    { key: "pass_success", label: "패스 성공" },
   ],
   GK: [
     { key: "block", label: "세이브" },
-    { key: "pass_success", label: "패스" },
+    { key: "pass_success", label: "패스 성공" },
   ],
 };
 
@@ -59,7 +59,8 @@ export function MetaDashboard({
   playerNameMap,
 }: MetaDashboardProps) {
   const router = useRouter();
-  const [tab, setTab] = useState<string>("ranker");
+  const [dataTab, setDataTab] = useState("ranker");
+  const [posTab, setPosTab] = useState("FWD");
 
   function selectMatchType(mt: number) {
     router.push(`/meta?matchtype=${mt}`);
@@ -95,8 +96,8 @@ export function MetaDashboard({
         ))}
       </div>
 
-      {/* 탭 */}
-      <Tabs value={tab} onValueChange={setTab} className="mt-6">
+      {/* 데이터 소스 탭 (랭커/일반) */}
+      <Tabs value={dataTab} onValueChange={setDataTab} className="mt-6">
         <TabsList variant="line">
           <TabsTrigger value="ranker">랭커 메타</TabsTrigger>
           <TabsTrigger value="general">일반 메타</TabsTrigger>
@@ -104,7 +105,11 @@ export function MetaDashboard({
 
         <TabsContent value="ranker">
           {hasRankerData ? (
-            <RankerGrid byPosition={rankerByPosition} />
+            <PositionTabView
+              posTab={posTab}
+              setPosTab={setPosTab}
+              rankerByPosition={rankerByPosition}
+            />
           ) : (
             <EmptyState />
           )}
@@ -112,7 +117,9 @@ export function MetaDashboard({
 
         <TabsContent value="general">
           {hasGeneralData ? (
-            <GeneralGrid
+            <GeneralView
+              posTab={posTab}
+              setPosTab={setPosTab}
               byPosition={generalByPosition}
               playerNameMap={playerNameMap}
             />
@@ -133,46 +140,66 @@ function EmptyState() {
   );
 }
 
-/* ── 랭커 메타 그리드 ── */
+/* ── 포지션 탭 (랭커) ── */
 
-function RankerGrid({
-  byPosition,
+function PositionTabView({
+  posTab,
+  setPosTab,
+  rankerByPosition,
 }: {
-  byPosition: Record<number, RankerMetaRow[]>;
+  posTab: string;
+  setPosTab: (v: string) => void;
+  rankerByPosition: Record<number, RankerMetaRow[]>;
 }) {
+  const group = POSITION_GROUPS.find((g) => g.key === posTab) ?? POSITION_GROUPS[0];
+  const statDefs = POSITION_STATS[group.key] ?? POSITION_STATS.MID;
+  const activePosns = group.positions.filter((p) => rankerByPosition[p]?.length);
+
   return (
-    <div className="mt-4 space-y-8">
-      {POSITION_GROUPS.map((group) => {
-        const activePosns = group.positions.filter(
-          (p) => byPosition[p]?.length,
-        );
-        if (activePosns.length === 0) return null;
+    <div className="mt-4">
+      {/* 포지션 그룹 탭 */}
+      <div className="flex gap-1 border-b border-border/20 pb-2">
+        {POSITION_GROUPS.map((g) => (
+          <button
+            key={g.key}
+            onClick={() => setPosTab(g.key)}
+            className={`rounded-md px-3 py-1.5 font-mono text-xs transition-colors ${
+              posTab === g.key
+                ? "bg-primary/10 text-primary font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
 
-        const stats = POSITION_STATS[group.label] ?? POSITION_STATS.MID;
-
-        return (
-          <div key={group.label}>
-            <h2 className="mb-3 font-mono text-xs font-semibold tracking-widest text-muted-foreground">
-              -- {group.label} --
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {activePosns.map((pos) => (
-                <RankerPositionCard
-                  key={pos}
-                  position={pos}
-                  players={byPosition[pos]}
-                  statDefs={stats}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
+      {/* 포지션별 카드 */}
+      <div className="mt-5 space-y-6">
+        {activePosns.map((pos) => {
+          const players = [...(rankerByPosition[pos] ?? [])].sort(
+            (a, b) => (b.goal as number) - (a.goal as number),
+          );
+          return (
+            <RankerPositionSection
+              key={pos}
+              position={pos}
+              players={players}
+              statDefs={statDefs}
+            />
+          );
+        })}
+        {activePosns.length === 0 && (
+          <p className="py-8 text-center font-mono text-xs text-muted-foreground">
+            해당 포지션 데이터 없음
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
-function RankerPositionCard({
+function RankerPositionSection({
   position,
   players,
   statDefs,
@@ -181,119 +208,151 @@ function RankerPositionCard({
   players: RankerMetaRow[];
   statDefs: { key: keyof RankerMetaRow; label: string }[];
 }) {
-  // 골 기준 정렬
-  const sorted = [...players].sort(
-    (a, b) => (b.goal as number) - (a.goal as number),
-  );
-  const top5 = sorted.slice(0, 5);
+  const top5 = players.slice(0, 5);
+  const best = top5[0];
+  const rest = top5.slice(1);
 
   return (
-    <div className="rounded-lg border border-border/30 bg-card/30 p-3">
-      {/* 헤더 */}
-      <div className="mb-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-xs font-bold text-primary">
-            {getPositionName(position)}
-          </span>
-        </div>
-        {/* 스탯 헤더 */}
-        <div className="flex gap-3 font-mono text-[10px] text-muted-foreground/60">
-          {statDefs.map((s) => (
-            <span key={s.key} className="w-8 text-right">
-              {s.label}
-            </span>
-          ))}
-        </div>
+    <div>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold text-primary">
+          {getPositionName(position)}
+        </span>
+        <span className="font-mono text-[10px] text-muted-foreground">
+          {players.length}명
+        </span>
       </div>
 
-      {/* 선수 목록 */}
-      <div className="space-y-1">
-        {top5.map((player, i) => (
-          <div
-            key={player.sp_id}
-            className="flex items-center gap-2 font-mono text-xs"
-          >
-            <span
-              className={`w-4 shrink-0 text-right ${i === 0 ? "text-primary font-bold" : "text-muted-foreground"}`}
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr]">
+        {/* 1위 선수 — 큰 카드 */}
+        {best && (
+          <div className="flex items-center gap-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+            <PlayerImage spId={best.sp_id} size="lg" className="!h-16 !w-16 !rounded-lg" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-primary">1st</span>
+                <span className="truncate text-sm font-semibold text-foreground">
+                  {best.player_name}
+                </span>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                {statDefs.map((s) => {
+                  const val = best[s.key] as number;
+                  return (
+                    <div key={s.key} className="flex items-baseline justify-between font-mono text-xs">
+                      <span className="text-muted-foreground">{s.label}</span>
+                      <span className="font-semibold text-primary tabular-nums">
+                        {val % 1 === 0 ? val : val.toFixed(1)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2~5위 */}
+        <div className="space-y-1">
+          {/* 스탯 헤더 */}
+          <div className="flex items-center gap-2 px-1 font-mono text-[10px] text-muted-foreground/50">
+            <span className="w-5" />
+            <span className="w-9" />
+            <span className="flex-1" />
+            {statDefs.map((s) => (
+              <span key={s.key} className="w-10 text-right">{s.label}</span>
+            ))}
+          </div>
+          {rest.map((player, i) => (
+            <div
+              key={player.sp_id}
+              className="flex items-center gap-2 rounded-md px-1 py-1.5 font-mono text-xs hover:bg-card/50 transition-colors"
             >
-              {i + 1}
-            </span>
-            <PlayerImage spId={player.sp_id} size="sm" />
-            <span className="min-w-0 flex-1 truncate text-foreground">
-              {player.player_name}
-            </span>
-            {/* 스탯 값 */}
-            <div className="flex shrink-0 gap-3">
+              <span className="w-5 shrink-0 text-right text-muted-foreground">
+                {i + 2}
+              </span>
+              <PlayerImage spId={player.sp_id} size="md" />
+              <span className="min-w-0 flex-1 truncate text-foreground">
+                {player.player_name}
+              </span>
               {statDefs.map((s) => {
                 const val = player[s.key] as number;
                 return (
                   <span
                     key={s.key}
-                    className={`w-8 text-right tabular-nums ${
-                      i === 0
-                        ? "text-primary font-semibold"
-                        : "text-muted-foreground"
-                    }`}
+                    className="w-10 shrink-0 text-right tabular-nums text-muted-foreground"
                   >
                     {val % 1 === 0 ? val : val.toFixed(1)}
                   </span>
                 );
               })}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ── 일반 메타 그리드 ── */
+/* ── 일반 메타 ── */
 
-function GeneralGrid({
+function GeneralView({
+  posTab,
+  setPosTab,
   byPosition,
   playerNameMap,
 }: {
+  posTab: string;
+  setPosTab: (v: string) => void;
   byPosition: Record<number, GeneralMetaRow[]>;
   playerNameMap: Record<number, string>;
 }) {
+  const group = POSITION_GROUPS.find((g) => g.key === posTab) ?? POSITION_GROUPS[0];
+  const activePosns = group.positions.filter((p) => byPosition[p]?.length);
   const maxUsage = Math.max(
-    ...Object.values(byPosition).flatMap((arr) =>
-      arr.map((r) => r.usage),
-    ),
+    ...Object.values(byPosition).flatMap((arr) => arr.map((r) => r.usage)),
     1,
   );
 
   return (
-    <div className="mt-4 space-y-8">
-      {POSITION_GROUPS.map((group) => {
-        const activePosns = group.positions.filter(
-          (p) => byPosition[p]?.length,
-        );
-        if (activePosns.length === 0) return null;
-        return (
-          <div key={group.label}>
-            <h2 className="mb-3 font-mono text-xs font-semibold tracking-widest text-muted-foreground">
-              -- {group.label} --
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {activePosns.map((pos) => (
-                <GeneralPositionCard
-                  key={pos}
-                  position={pos}
-                  players={byPosition[pos]}
-                  playerNameMap={playerNameMap}
-                  maxUsage={maxUsage}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
+    <div className="mt-4">
+      <div className="flex gap-1 border-b border-border/20 pb-2">
+        {POSITION_GROUPS.map((g) => (
+          <button
+            key={g.key}
+            onClick={() => setPosTab(g.key)}
+            className={`rounded-md px-3 py-1.5 font-mono text-xs transition-colors ${
+              posTab === g.key
+                ? "bg-primary/10 text-primary font-semibold"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {g.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5 space-y-6">
+        {activePosns.map((pos) => (
+          <GeneralPositionSection
+            key={pos}
+            position={pos}
+            players={byPosition[pos]}
+            playerNameMap={playerNameMap}
+            maxUsage={maxUsage}
+          />
+        ))}
+        {activePosns.length === 0 && (
+          <p className="py-8 text-center font-mono text-xs text-muted-foreground">
+            해당 포지션 데이터 없음
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
-function GeneralPositionCard({
+function GeneralPositionSection({
   position,
   players,
   playerNameMap,
@@ -305,46 +364,67 @@ function GeneralPositionCard({
   maxUsage: number;
 }) {
   const top5 = players.slice(0, 5);
+  const best = top5[0];
+  const rest = top5.slice(1);
 
   return (
-    <div className="rounded-lg border border-border/30 bg-card/30 p-3">
-      <div className="mb-2.5 flex items-center gap-2">
-        <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-xs font-bold text-primary">
+    <div>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="rounded bg-primary/10 px-2 py-0.5 font-mono text-xs font-bold text-primary">
           {getPositionName(position)}
         </span>
         <span className="font-mono text-[10px] text-muted-foreground">
           {players.length}명
         </span>
       </div>
-      <div className="space-y-1.5">
-        {top5.map((player, i) => {
-          const name =
-            playerNameMap[player.sp_id] ?? `#${player.sp_id}`;
-          const barWidth = (player.usage / maxUsage) * 100;
-          return (
-            <div
-              key={player.sp_id}
-              className="flex items-center gap-2 font-mono text-xs"
-            >
-              <span className="w-4 shrink-0 text-right text-muted-foreground">
-                {i + 1}
-              </span>
-              <PlayerImage spId={player.sp_id} size="sm" />
-              <div className="relative min-w-0 flex-1">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-sm bg-primary/10"
-                  style={{ width: `${barWidth}%` }}
-                />
-                <span className="relative truncate pl-1.5 text-foreground">
-                  {name}
+
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr]">
+        {best && (
+          <div className="flex items-center gap-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+            <PlayerImage spId={best.sp_id} size="lg" className="!h-16 !w-16 !rounded-lg" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-primary">1st</span>
+                <span className="truncate text-sm font-semibold text-foreground">
+                  {playerNameMap[best.sp_id] ?? `#${best.sp_id}`}
                 </span>
               </div>
-              <span className="shrink-0 tabular-nums text-muted-foreground">
-                {player.usage.toLocaleString()}
-              </span>
+              <div className="mt-2 font-mono text-xs text-muted-foreground">
+                사용 {best.usage.toLocaleString()}회
+              </div>
             </div>
-          );
-        })}
+          </div>
+        )}
+
+        <div className="space-y-1">
+          {rest.map((player, i) => {
+            const name = playerNameMap[player.sp_id] ?? `#${player.sp_id}`;
+            const barWidth = (player.usage / maxUsage) * 100;
+            return (
+              <div
+                key={player.sp_id}
+                className="flex items-center gap-2 rounded-md px-1 py-1.5 font-mono text-xs hover:bg-card/50 transition-colors"
+              >
+                <span className="w-5 shrink-0 text-right text-muted-foreground">
+                  {i + 2}
+                </span>
+                <PlayerImage spId={player.sp_id} size="md" />
+                <div className="relative min-w-0 flex-1">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-sm bg-primary/10"
+                    style={{ width: `${barWidth}%` }}
+                  />
+                  <span className="relative truncate pl-1.5 text-foreground">
+                    {name}
+                  </span>
+                </div>
+                <span className="shrink-0 tabular-nums text-muted-foreground">
+                  {player.usage.toLocaleString()}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
