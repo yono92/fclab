@@ -187,8 +187,13 @@ function PositionTabView({
       {/* 포지션별 카드 */}
       <div className="mt-5 space-y-6">
         {activePosns.map((pos) => {
+          const sortKey = group.key === "DEF" || group.key === "GK"
+            ? (r: RankerMetaRow) => r.tackle + r.block + r.pass_success
+            : group.key === "MID"
+              ? (r: RankerMetaRow) => r.assist + r.pass_success + r.goal
+              : (r: RankerMetaRow) => r.goal + r.assist + r.effective_shoot;
           const players = [...(rankerByPosition[pos] ?? [])].sort(
-            (a, b) => (b.goal as number) - (a.goal as number),
+            (a, b) => sortKey(b) - sortKey(a),
           );
           return (
             <RankerPositionSection
