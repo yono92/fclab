@@ -24,11 +24,9 @@ export default async function MetaPage({ searchParams }: PageProps) {
       fetchGeneralMeta(matchtype),
     ]);
 
-    const allSpIds = [
-      ...rankerRows.map((r) => r.sp_id),
-      ...generalRows.map((r) => r.sp_id),
-    ];
-    const nameMap = await resolvePlayerNames([...new Set(allSpIds)]);
+    // 일반 메타용 선수명 매핑
+    const generalSpIds = generalRows.map((r) => r.sp_id);
+    const nameMap = await resolvePlayerNames([...new Set(generalSpIds)]);
     const playerNameMap = Object.fromEntries(nameMap);
 
     const rankerByPosition = Object.fromEntries(groupByPosition(rankerRows));

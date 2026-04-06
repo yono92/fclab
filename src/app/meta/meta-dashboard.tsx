@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getPositionName } from "@/lib/resolve-meta";
-import type { MetaPlayerRow } from "@/lib/meta-queries";
+import type { RankerMetaRow, GeneralMetaRow } from "@/lib/meta-queries";
 
 const MATCH_TYPES = [
   { matchtype: 50, desc: "공식경기", icon: "🏆" },
@@ -13,21 +13,41 @@ const MATCH_TYPES = [
   { matchtype: 204, desc: "볼타", icon: "🎮" },
 ];
 
-// GK → DEF → MID → FWD 순서
-const POSITION_ORDER = [0, 5, 4, 6, 3, 7, 2, 8, 1, 10, 9, 11, 14, 13, 15, 12, 16, 18, 17, 19, 25, 24, 26, 21, 20, 22, 23, 27];
+// 포지션 그룹 및 표시 순서
+const POSITION_GROUPS: { label: string; positions: number[] }[] = [
+  { label: "FWD", positions: [25, 24, 26, 21, 20, 22, 23, 27] },
+  { label: "MID", positions: [18, 17, 19, 14, 13, 15, 12, 16, 10, 9, 11] },
+  { label: "DEF", positions: [5, 4, 6, 3, 7, 2, 8, 1] },
+  { label: "GK", positions: [0] },
+];
 
-const POSITION_GROUP: Record<string, string> = {
-  GK: "GK",
-  SW: "DEF", RWB: "DEF", RB: "DEF", RCB: "DEF", CB: "DEF", LCB: "DEF", LB: "DEF", LWB: "DEF",
-  RDM: "MID", CDM: "MID", LDM: "MID", RM: "MID", RCM: "MID", CM: "MID", LCM: "MID", LM: "MID",
-  RAM: "MID", CAM: "MID", LAM: "MID",
-  RF: "FWD", CF: "FWD", LF: "FWD", RW: "FWD", RS: "FWD", ST: "FWD", LS: "FWD", LW: "FWD",
+// 포지션별 표시할 주요 스탯
+const POSITION_STATS: Record<string, { key: keyof RankerMetaRow; label: string }[]> = {
+  FWD: [
+    { key: "goal", label: "골" },
+    { key: "assist", label: "어시" },
+    { key: "effective_shoot", label: "유효슛" },
+  ],
+  MID: [
+    { key: "assist", label: "어시" },
+    { key: "pass_success", label: "패스" },
+    { key: "goal", label: "골" },
+  ],
+  DEF: [
+    { key: "tackle", label: "태클" },
+    { key: "block", label: "블록" },
+    { key: "pass_success", label: "패스" },
+  ],
+  GK: [
+    { key: "block", label: "세이브" },
+    { key: "pass_success", label: "패스" },
+  ],
 };
 
 interface MetaDashboardProps {
   matchtype: number;
-  rankerByPosition: Record<number, MetaPlayerRow[]>;
-  generalByPosition: Record<number, MetaPlayerRow[]>;
+  rankerByPosition: Record<number, RankerMetaRow[]>;
+  generalByPosition: Record<number, GeneralMetaRow[]>;
   playerNameMap: Record<number, string>;
 }
 
@@ -44,28 +64,8 @@ export function MetaDashboard({
     router.push(`/meta?matchtype=${mt}`);
   }
 
-  const byPosition = tab === "ranker" ? rankerByPosition : generalByPosition;
-
-  // 데이터가 있는 포지션만 정렬된 순서로
-  const sortedPositions = POSITION_ORDER.filter((p) => byPosition[p]?.length);
-
-  // 포지션 그룹별로 묶기
-  const groups: { label: string; positions: number[] }[] = [];
-  let currentGroup = "";
-  for (const pos of sortedPositions) {
-    const name = getPositionName(pos);
-    const group = POSITION_GROUP[name] ?? "기타";
-    if (group !== currentGroup) {
-      groups.push({ label: group, positions: [] });
-      currentGroup = group;
-    }
-    groups[groups.length - 1].positions.push(pos);
-  }
-
-  const maxUsage = Math.max(
-    ...sortedPositions.flatMap((p) => (byPosition[p] ?? []).map((r) => r.usage)),
-    1,
-  );
+  const hasRankerData = Object.values(rankerByPosition).some((v) => v.length > 0);
+  const hasGeneralData = Object.values(generalByPosition).some((v) => v.length > 0);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -73,7 +73,7 @@ export function MetaDashboard({
         &gt; meta_dashboard<span className="animate-pulse">_</span>
       </h1>
       <p className="mt-1 font-mono text-xs text-muted-foreground">
-        랭커와 일반 유저의 선수 사용률을 분리해서 비교합니다
+        TOP 10,000 랭커의 20경기 평균 스탯 · 포지션별 최고 퍼포먼스 선수
       </p>
 
       {/* 매치타입 칩 */}
@@ -94,88 +94,211 @@ export function MetaDashboard({
         ))}
       </div>
 
-      {/* 탭: 랭커 / 일반 */}
-      <Tabs
-        value={tab}
-        onValueChange={setTab}
-        className="mt-6"
-      >
+      {/* 탭 */}
+      <Tabs value={tab} onValueChange={setTab} className="mt-6">
         <TabsList variant="line">
           <TabsTrigger value="ranker">랭커 메타</TabsTrigger>
           <TabsTrigger value="general">일반 메타</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ranker">
-          <PositionGrid
-            groups={groups}
-            byPosition={rankerByPosition}
-            playerNameMap={playerNameMap}
-            maxUsage={maxUsage}
-          />
+          {hasRankerData ? (
+            <RankerGrid byPosition={rankerByPosition} />
+          ) : (
+            <EmptyState />
+          )}
         </TabsContent>
 
         <TabsContent value="general">
-          <PositionGrid
-            groups={groups}
-            byPosition={generalByPosition}
-            playerNameMap={playerNameMap}
-            maxUsage={maxUsage}
-          />
+          {hasGeneralData ? (
+            <GeneralGrid
+              byPosition={generalByPosition}
+              playerNameMap={playerNameMap}
+            />
+          ) : (
+            <EmptyState />
+          )}
         </TabsContent>
       </Tabs>
-
-      {sortedPositions.length === 0 && (
-        <p className="mt-12 text-center font-mono text-sm text-muted-foreground">
-          데이터가 아직 없습니다
-        </p>
-      )}
     </div>
   );
 }
 
-function PositionGrid({
-  groups,
+function EmptyState() {
+  return (
+    <p className="mt-12 text-center font-mono text-sm text-muted-foreground">
+      데이터가 아직 없습니다
+    </p>
+  );
+}
+
+/* ── 랭커 메타 그리드 ── */
+
+function RankerGrid({
   byPosition,
-  playerNameMap,
-  maxUsage,
 }: {
-  groups: { label: string; positions: number[] }[];
-  byPosition: Record<number, MetaPlayerRow[]>;
-  playerNameMap: Record<number, string>;
-  maxUsage: number;
+  byPosition: Record<number, RankerMetaRow[]>;
 }) {
   return (
-    <div className="mt-4 space-y-6">
-      {groups.map((group) => (
-        <div key={group.label}>
-          <h2 className="mb-3 font-mono text-xs font-semibold text-muted-foreground tracking-widest">
-            -- {group.label} --
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {group.positions.map((pos) => (
-              <PositionCard
-                key={pos}
-                position={pos}
-                players={byPosition[pos] ?? []}
-                playerNameMap={playerNameMap}
-                maxUsage={maxUsage}
-              />
-            ))}
+    <div className="mt-4 space-y-8">
+      {POSITION_GROUPS.map((group) => {
+        const activePosns = group.positions.filter(
+          (p) => byPosition[p]?.length,
+        );
+        if (activePosns.length === 0) return null;
+
+        const stats = POSITION_STATS[group.label] ?? POSITION_STATS.MID;
+
+        return (
+          <div key={group.label}>
+            <h2 className="mb-3 font-mono text-xs font-semibold tracking-widest text-muted-foreground">
+              -- {group.label} --
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {activePosns.map((pos) => (
+                <RankerPositionCard
+                  key={pos}
+                  position={pos}
+                  players={byPosition[pos]}
+                  statDefs={stats}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-function PositionCard({
+function RankerPositionCard({
+  position,
+  players,
+  statDefs,
+}: {
+  position: number;
+  players: RankerMetaRow[];
+  statDefs: { key: keyof RankerMetaRow; label: string }[];
+}) {
+  // 골 기준 정렬
+  const sorted = [...players].sort(
+    (a, b) => (b.goal as number) - (a.goal as number),
+  );
+  const top5 = sorted.slice(0, 5);
+
+  return (
+    <div className="rounded-lg border border-border/30 bg-card/30 p-3">
+      {/* 헤더 */}
+      <div className="mb-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-xs font-bold text-primary">
+            {getPositionName(position)}
+          </span>
+        </div>
+        {/* 스탯 헤더 */}
+        <div className="flex gap-3 font-mono text-[10px] text-muted-foreground/60">
+          {statDefs.map((s) => (
+            <span key={s.key} className="w-8 text-right">
+              {s.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* 선수 목록 */}
+      <div className="space-y-1">
+        {top5.map((player, i) => (
+          <div
+            key={player.sp_id}
+            className="flex items-center gap-2 font-mono text-xs"
+          >
+            <span
+              className={`w-4 shrink-0 text-right ${i === 0 ? "text-primary font-bold" : "text-muted-foreground"}`}
+            >
+              {i + 1}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-foreground">
+              {player.player_name}
+            </span>
+            {/* 스탯 값 */}
+            <div className="flex shrink-0 gap-3">
+              {statDefs.map((s) => {
+                const val = player[s.key] as number;
+                return (
+                  <span
+                    key={s.key}
+                    className={`w-8 text-right tabular-nums ${
+                      i === 0
+                        ? "text-primary font-semibold"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {val % 1 === 0 ? val : val.toFixed(1)}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── 일반 메타 그리드 ── */
+
+function GeneralGrid({
+  byPosition,
+  playerNameMap,
+}: {
+  byPosition: Record<number, GeneralMetaRow[]>;
+  playerNameMap: Record<number, string>;
+}) {
+  const maxUsage = Math.max(
+    ...Object.values(byPosition).flatMap((arr) =>
+      arr.map((r) => r.usage),
+    ),
+    1,
+  );
+
+  return (
+    <div className="mt-4 space-y-8">
+      {POSITION_GROUPS.map((group) => {
+        const activePosns = group.positions.filter(
+          (p) => byPosition[p]?.length,
+        );
+        if (activePosns.length === 0) return null;
+        return (
+          <div key={group.label}>
+            <h2 className="mb-3 font-mono text-xs font-semibold tracking-widest text-muted-foreground">
+              -- {group.label} --
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {activePosns.map((pos) => (
+                <GeneralPositionCard
+                  key={pos}
+                  position={pos}
+                  players={byPosition[pos]}
+                  playerNameMap={playerNameMap}
+                  maxUsage={maxUsage}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function GeneralPositionCard({
   position,
   players,
   playerNameMap,
   maxUsage,
 }: {
   position: number;
-  players: MetaPlayerRow[];
+  players: GeneralMetaRow[];
   playerNameMap: Record<number, string>;
   maxUsage: number;
 }) {
@@ -183,7 +306,7 @@ function PositionCard({
 
   return (
     <div className="rounded-lg border border-border/30 bg-card/30 p-3">
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2.5 flex items-center gap-2">
         <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-xs font-bold text-primary">
           {getPositionName(position)}
         </span>
@@ -193,10 +316,14 @@ function PositionCard({
       </div>
       <div className="space-y-1.5">
         {top5.map((player, i) => {
-          const name = playerNameMap[player.sp_id] ?? `#${player.sp_id}`;
+          const name =
+            playerNameMap[player.sp_id] ?? `#${player.sp_id}`;
           const barWidth = (player.usage / maxUsage) * 100;
           return (
-            <div key={player.sp_id} className="flex items-center gap-2 font-mono text-xs">
+            <div
+              key={player.sp_id}
+              className="flex items-center gap-2 font-mono text-xs"
+            >
               <span className="w-4 shrink-0 text-right text-muted-foreground">
                 {i + 1}
               </span>

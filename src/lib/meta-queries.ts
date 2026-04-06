@@ -1,6 +1,20 @@
 import { createSupabaseClient } from "@/lib/supabase";
 
-export interface MetaPlayerRow {
+export interface RankerMetaRow {
+  sp_id: number;
+  sp_position: number;
+  player_name: string;
+  goal: number;
+  assist: number;
+  shoot: number;
+  effective_shoot: number;
+  pass_success: number;
+  dribble_success: number;
+  tackle: number;
+  block: number;
+}
+
+export interface GeneralMetaRow {
   sp_id: number;
   sp_position: number;
   usage: number;
@@ -9,7 +23,7 @@ export interface MetaPlayerRow {
 export async function fetchRankerMeta(
   matchType: number,
   limit = 200,
-): Promise<MetaPlayerRow[]> {
+): Promise<RankerMetaRow[]> {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase.rpc("get_ranker_meta", {
     p_match_type: matchType,
@@ -22,7 +36,7 @@ export async function fetchRankerMeta(
 export async function fetchGeneralMeta(
   matchType: number,
   limit = 200,
-): Promise<MetaPlayerRow[]> {
+): Promise<GeneralMetaRow[]> {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase.rpc("get_general_meta", {
     p_match_type: matchType,
@@ -32,10 +46,10 @@ export async function fetchGeneralMeta(
   return data ?? [];
 }
 
-export function groupByPosition(
-  rows: MetaPlayerRow[],
-): Map<number, MetaPlayerRow[]> {
-  const map = new Map<number, MetaPlayerRow[]>();
+export function groupByPosition<T extends { sp_position: number }>(
+  rows: T[],
+): Map<number, T[]> {
+  const map = new Map<number, T[]>();
   for (const row of rows) {
     const list = map.get(row.sp_position) ?? [];
     list.push(row);
